@@ -6,6 +6,14 @@ import os
 from meta import ROOT_PATH
 
 
+def load_data(conf):
+    cases = {
+        'cifar100': load_cifar100,
+        'cifar_feat': load_cifar_feature
+    }
+    loader = cases.get(conf.set_name)
+
+
 def load_cifar100():
     data_dir = os.path.join(ROOT_PATH, 'data', 'cifar100')
     if not os.path.exists(data_dir):
