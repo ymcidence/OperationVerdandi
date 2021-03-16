@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import numpy as np
 from scipy.optimize import linear_sum_assignment as linear_assignment
 from sklearn.metrics.cluster import adjusted_rand_score, normalized_mutual_info_score, silhouette_score
-import tensorflow as tf
+# import tensorflow as tf
 
 
 def purity(feat, semantic, pred):
@@ -31,7 +31,7 @@ def acc(semantic, pred):
     for i in range(pred.size):
         w[pred[i], semantic[i]] += 1
     ind = linear_assignment(np.max(w) - w)
-    return sum([w[i, j] for i, j in ind]) * 1.0 / pred.size, w
+    return sum([w[i, j] for i, j in zip(ind[0], ind[1])]) * 1.0 / pred.size, w
 
 
 def nmi(semantic, pred):
@@ -59,7 +59,7 @@ def silhouette_coefficient(feat, pred, metric='euclidean'):
 
 
 def hook(feat, semantic, pred):
-    _acc = acc(semantic, pred)
+    _acc, _ = acc(semantic, pred)
     _nmi = nmi(semantic, pred)
     _ari = ari(semantic, pred)
     _sc = silhouette_coefficient(feat, pred)

@@ -46,3 +46,7 @@ def main():
             if i % 5000 == 0 and i > 0:
                 save_name = os.path.join(save_path, '_' + str(i))
                 checkpoint.save(file_prefix=save_name)
+
+
+if __name__ == '__main__':
+    main()

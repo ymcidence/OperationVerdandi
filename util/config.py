@@ -11,5 +11,5 @@ parser.add_argument('-e', '--encoder', default='linear')
 parser.add_argument('-a', '--assigner', default='soft')
 parser.add_argument('-g', '--gumbel_temp', default=0.3,
                     help='temp of the gumbel trick. Set it <0 to disable stochasticity')
-parser.add_argument('-n', '--set_name', default='cifar', help='dataset')
-parser.add_argument('-t', '--task_name', default='default', help='task name')
+parser.add_argument('-n', '--set_name', default='cifar_feat', help='dataset')
+parser.add_argument('-tn', '--task_name', default='default', help='task name')
