@@ -31,7 +31,7 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
     label_1 = data_1['label']
     label_2 = data_2['label']
 
-    _step = -1 if step % 50 > 0 else step
+    _step = -1 if step % 100 > 0 else step
 
     with tf.GradientTape() as tape:
         agg_1, assign_1, feat_1 = model(feat_1)
@@ -54,6 +54,7 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
         tf.summary.scalar('eval/acc', acc, step)
         tf.summary.scalar('eval/ari', ari, step)
         tf.summary.scalar('eval/sc', sc, step)
+        tf.summary.scalar('loss/all', loss, step)
 
         tf.summary.histogram('eval/assign', pred, step)
 
