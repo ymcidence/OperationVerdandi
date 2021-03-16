@@ -12,12 +12,13 @@ def cosine_sim(a, b):
     return sim
 
 
-def simclr_loss(feat_1, feat_2, temp):
+def simclr_loss(feat_1, feat_2, temp, k=None):
     """
 
     :param feat_1: [N D]
     :param feat_2: [N D]
     :param temp: temperature
+    :param k: masking some parts
     :return:
     """
     sim_11 = cosine_sim(feat_1, feat_1) / temp
@@ -27,7 +28,18 @@ def simclr_loss(feat_1, feat_2, temp):
 
     batch_size = tf.shape(feat_1)[0]
 
-    mask = tf.eye(batch_size)
+    if k is not None:
+        mask_11 = tf.eye(k)
+        mask_22 = tf.ones([batch_size - k, batch_size - k])
+        mask_12 = tf.ones([k, batch_size - k], dtype=tf.float32)
+        mask_21 = tf.ones([batch_size - k, k], dtype=tf.float32)
+
+        upper = tf.concat([mask_11, mask_12], axis=1)
+        lower = tf.concat([mask_21, mask_22], axis=1)
+        mask = tf.concat([upper, lower], axis=0)
+
+    else:
+        mask = tf.eye(batch_size)
     label = tf.one_hot(tf.range(batch_size), batch_size * 2)
 
     sim_11 = sim_11 - mask * LARGE_NUM

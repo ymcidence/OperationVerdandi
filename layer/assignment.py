@@ -4,6 +4,7 @@ import tensorflow as tf
 from layer.transformer.isab import MultiheadAttentionBlock
 from layer.gumbel import gumbel_softmax
 from layer.gcn import GCNLayer
+import numpy as np
 
 
 class Assigner(tf.keras.Model):
@@ -78,8 +79,14 @@ class GCNAssigner(Assigner):
     def __init__(self, conf):
         super().__init__()
         self.gcn = GCNLayer(conf.d_model)
-        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
-        self.fc_2 = tf.keras.layers.Dense(conf.d_model)
+        self.fc_1 = tf.keras.Sequential([
+            tf.keras.layers.Dense(conf.d_model),
+            tf.keras.layers.BatchNormalization()
+        ])
+        self.fc_2 = tf.keras.Sequential([
+            tf.keras.layers.Dense(conf.d_model),
+            tf.keras.layers.BatchNormalization()
+        ])
         self.k = conf.k
         self.temp = conf.gumbel_temp
         self.bn = tf.keras.layers.BatchNormalization()
@@ -91,7 +98,6 @@ class GCNAssigner(Assigner):
         projected = tf.concat([_c, _s], axis=0)
         all_samples = tf.concat([context, sample], axis=0)
 
-
         dist = self.row_distance(projected, projected)  # [N+K N+K]
         adj = tf.exp(-dist / self.temp)
         gcn_rslt = self.gcn(all_samples, adj)
@@ -100,12 +106,16 @@ class GCNAssigner(Assigner):
         _d = tf.shape(context)[1]
         _n = tf.shape(sample)[0]
 
-        rslt = tf.slice(gcn_rslt, [0, 0], [_k, _d])
+        # rslt = tf.slice(gcn_rslt, [0, 0], [_k, _d])
+
+        rslt = gcn_rslt#[:_k, :]
         assignment = tf.slice(adj, [_k, 0], [_n, _k])  # [N K]
 
         if step > 0:
             fig = tf.slice(adj, [0, _k], [_k, _n])[tf.newaxis, :, :, tf.newaxis]  # [1 K N 1]
             tf.summary.image('att', fig, step=step)
+
+        self.add_loss(tf.reduce_mean(gcn_rslt) * 0)
 
         return rslt, assignment
 
