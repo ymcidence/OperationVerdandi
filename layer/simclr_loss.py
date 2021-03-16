@@ -4,6 +4,8 @@ import tensorflow as tf
 
 LARGE_NUM = 1e9
 
+import numpy as np
+
 
 def cosine_sim(a, b):
     normalize_a = tf.nn.l2_normalize(a, 1)
@@ -37,9 +39,13 @@ def simclr_loss(feat_1, feat_2, temp, k=None):
         upper = tf.concat([mask_11, mask_12], axis=1)
         lower = tf.concat([mask_21, mask_22], axis=1)
         mask = tf.concat([upper, lower], axis=0)
+        loss_mask_1 = tf.ones(k, dtype=tf.float32)
+        loss_mask_2 = tf.zeros(batch_size - k, dtype=tf.float32)
+        loss_mask = tf.concat([loss_mask_1, loss_mask_2], axis=0)
 
     else:
         mask = tf.eye(batch_size)
+        loss_mask = tf.ones(batch_size, dtype=tf.float32)
     label = tf.one_hot(tf.range(batch_size), batch_size * 2)
 
     sim_11 = sim_11 - mask * LARGE_NUM
@@ -48,6 +54,6 @@ def simclr_loss(feat_1, feat_2, temp, k=None):
     loss_1 = tf.nn.softmax_cross_entropy_with_logits(label, tf.concat([sim_12, sim_11], axis=1))
     loss_2 = tf.nn.softmax_cross_entropy_with_logits(label, tf.concat([sim_21, sim_22], axis=1))
 
-    loss = tf.reduce_mean(loss_1 + loss_2)
-
+    # loss = tf.reduce_mean(loss_1 + loss_2)
+    loss = tf.reduce_sum((loss_1 + loss_2) * loss_mask) / tf.reduce_sum(loss_mask)
     return loss, sim_12, label
