@@ -48,11 +48,11 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
         pred = tf.argmax(pred, axis=1)
         feat = tf.concat([feat_1, feat_2], axis=0)
 
-        acc, nmi, ari, sc = hook(feat, label, pred)
+        acc, nmi, ari, sc = hook(feat.numpy(), label.numpy(), pred.numpy())
 
         tf.summary.scalar('eval/nmi', nmi, step)
         tf.summary.scalar('eval/acc', acc, step)
         tf.summary.scalar('eval/ari', ari, step)
         tf.summary.scalar('eval/sc', sc, step)
 
-
+    return loss.numpy()
