@@ -57,7 +57,11 @@ class SoftAssigner(Assigner):
         if self.gumbel_temp > 0:  # when the gumbel trick is used
             assignment = gumbel_softmax(tf.transpose(_qk), self.gumbel_temp, hard=False)  # [N K]
             _assignment = gumbel_softmax(tf.transpose(_qk), self.gumbel_temp, hard=True)
-            agg_feat = tf.matmul(assignment, _v, transpose_a=True)
+            agg_feat = tf.matmul(assignment, _v, transpose_a=True)  # [K D]
+            sum_energy = 1 / (tf.reduce_sum(assignment, axis=0) + 1e-8)
+
+            agg_feat = tf.einsum('kd,k->kd', agg_feat, sum_energy)
+
             agg_feat = self.ln(agg_feat, training=training)
 
             if step > 0:
