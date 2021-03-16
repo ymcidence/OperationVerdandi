@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import tensorflow as tf
 from layer.transformer.isab import MultiheadAttentionBlock
 from layer.gumbel import gumbel_softmax
+from layer.gcn import GCNLayer
 
 
 class Assigner(tf.keras.Model):
@@ -71,6 +72,19 @@ class SoftAssigner(Assigner):
 
         else:
             raise NotImplementedError
+
+
+class GCNAssigner(Assigner):
+    def __init__(self, conf):
+        super().__init__()
+        self.gcn = GCNLayer(conf.d_model)
+        self.projection = tf.keras.layers.Dense(conf.d_model)
+        self.k = conf.k
+        self.temp = conf.gumbel_temp
+
+    def call(self, context, sample, training=True, step=-1):
+        all_samples = tf.concat([context, sample], axis=0)
+        projected = self.projection(all_samples)
 
 
 def get_assigner(conf) -> tf.keras.Model:
