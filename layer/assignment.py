@@ -61,7 +61,7 @@ class SoftAssigner(Assigner):
             agg_feat = self.ln(agg_feat, training=training)
 
             if step > 0:
-                tf.summary.image('att', _qk[tf.newaxis, :, :, tf.newaxis])
+                tf.summary.image('att', _qk[tf.newaxis, :, :, tf.newaxis], step=step)
 
             return agg_feat, _assignment
 
