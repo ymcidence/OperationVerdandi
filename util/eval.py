@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import numpy as np
 from scipy.optimize import linear_sum_assignment as linear_assignment
 from sklearn.metrics.cluster import adjusted_rand_score, normalized_mutual_info_score, silhouette_score
+import tensorflow as tf
 
 
 def purity(feat, semantic, pred):
@@ -55,3 +56,11 @@ def ari(semantic, pred):
 
 def silhouette_coefficient(feat, pred, metric='euclidean'):
     return silhouette_score(feat, pred, metric=metric)
+
+
+def hook(feat, semantic, pred):
+    _acc = acc(semantic, pred)
+    _nmi = nmi(semantic, pred)
+    _ari = ari(semantic, pred)
+    _sc = silhouette_coefficient(feat, pred)
+    return _acc, _nmi, _ari, _sc
