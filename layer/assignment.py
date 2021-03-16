@@ -39,18 +39,18 @@ class SoftAssigner(Assigner):
     def __init__(self, conf):
         super().__init__()
 
-        self.v = tf.keras.layers.Dense(conf.d_model)  # [N D]
+        # self.v = tf.keras.layers.Dense(conf.d_model)  # [N D]
         # self.k = tf.keras.layers.Dense(conf.d_model)  # [N D]
-        self.q = tf.keras.layers.Dense(conf.d_model)  # [K D]
+        # self.q = tf.keras.layers.Dense(conf.d_model)  # [K D]
 
         self.ln = tf.keras.layers.LayerNormalization()
         self.gumbel_temp = conf.gumbel_temp
         self.d_model = conf.d_model
 
     def call(self, context, sample, training=True):
-        _q = self.q(context)  # [K D]
+        _q = context  # [K D]
         _k = sample  # [N D]
-        _v = self.v(sample)  # [N D]
+        _v = sample  # [N D]
 
         _qk = tf.matmul(_q, _k, transpose_b=True)  # [K N]
 
