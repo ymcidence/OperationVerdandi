@@ -39,18 +39,18 @@ class SoftAssigner(Assigner):
     def __init__(self, conf):
         super().__init__()
 
-        # self.v = tf.keras.layers.Dense(conf.d_model)  # [N D]
-        # self.k = tf.keras.layers.Dense(conf.d_model)  # [N D]
-        # self.q = tf.keras.layers.Dense(conf.d_model)  # [K D]
+        self.v = tf.keras.layers.Dense(conf.d_model)  # [N D]
+        self.k = tf.keras.layers.Dense(conf.d_model)  # [N D]
+        self.q = tf.keras.layers.Dense(conf.d_model)  # [K D]
 
         self.ln = tf.keras.layers.LayerNormalization()
         self.gumbel_temp = conf.gumbel_temp
         self.d_model = conf.d_model
 
-    def call(self, context, sample, training=True):
-        _q = context  # [K D]
-        _k = sample  # [N D]
-        _v = sample  # [N D]
+    def call(self, context, sample, training=True, step=-1):
+        _q = self.q(context)  # [K D]
+        _k = self.k(sample)  # [N D]
+        _v = self.v(sample)  # [N D]
 
         _qk = tf.matmul(_q, _k, transpose_b=True)  # [K N]
 
@@ -59,6 +59,9 @@ class SoftAssigner(Assigner):
             _assignment = gumbel_softmax(tf.transpose(_qk), self.gumbel_temp, hard=True)
             agg_feat = tf.matmul(assignment, _v, transpose_a=True)
             agg_feat = self.ln(agg_feat, training=training)
+
+            if step > 0:
+                tf.summary.image('att', _qk[tf.newaxis, :, :, tf.newaxis])
 
             return agg_feat, _assignment
 

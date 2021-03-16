@@ -17,9 +17,9 @@ class BasicModel(tf.keras.Model):
         self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model], stddev=.01), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
 
-    def call(self, inputs, training=True, mask=None):
+    def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
-        agg_feat, assignment = self.assigner(self.context, feat, training=training)
+        agg_feat, assignment = self.assigner(self.context, feat, training=training, step=step)
 
         return agg_feat, assignment, feat
 
@@ -34,7 +34,7 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
     _step = -1 if step % 100 > 0 else step
 
     with tf.GradientTape() as tape:
-        agg_1, assign_1, feat_1 = model(feat_1)
+        agg_1, assign_1, feat_1 = model(feat_1, step=_step)
         agg_2, assign_2, feat_2 = model(feat_2)
         loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
 
