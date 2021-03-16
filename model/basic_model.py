@@ -16,6 +16,7 @@ class BasicModel(tf.keras.Model):
 
         self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model], stddev=.01), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
+        self.k = conf.k
 
     def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
@@ -36,7 +37,10 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
     with tf.GradientTape() as tape:
         agg_1, assign_1, feat_1 = model(feat_1, step=_step)
         agg_2, assign_2, feat_2 = model(feat_2)
-        loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
+        loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp, k=model.k)
+
+        # for l in model.losses:
+        #     loss += l
 
         gradients = tape.gradient(loss, model.trainable_variables)
 
