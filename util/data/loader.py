@@ -18,7 +18,7 @@ def load_data(conf, training=True):
 
     if training:
         # Note that in clustering, we don't use the conventional train-test split, but instead, have them together
-        return _data['train'].concatenate(_data['test']).repeat().shuffle(50000).batch(conf.batch_size).prefetch(
+        return _data['train'].concatenate(_data['test']).repeat().shuffle(conf.shuffle).batch(conf.batch_size).prefetch(
             AUTOTUNE)
     else:
         return _data['test'].batch(conf.batch_size).prefetch(AUTOTUNE)
