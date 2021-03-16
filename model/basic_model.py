@@ -55,4 +55,6 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
         tf.summary.scalar('eval/ari', ari, step)
         tf.summary.scalar('eval/sc', sc, step)
 
+        tf.summary.histogram('eval/assign', pred, step)
+
     return loss.numpy()
