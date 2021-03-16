@@ -85,11 +85,46 @@ class GCNAssigner(Assigner):
     def call(self, context, sample, training=True, step=-1):
         all_samples = tf.concat([context, sample], axis=0)
         projected = self.projection(all_samples)
+        dist = self.row_distance(projected, projected)  # [N+K N+K]
+        adj = tf.exp(-dist / self.temp)
+        gcn_rslt = self.gcn(all_samples, adj)
+
+        _k = tf.shape(context)[0]
+        _d = tf.shape(context)[1]
+        _n = tf.shape(sample)[0]
+
+        rslt = tf.slice(gcn_rslt, [0, 0], [_k, _d])
+        assignment = tf.slice(adj, [_k, 0], [_n, _k])  # [N K]
+
+        if step > 0:
+            fig = tf.slice(adj, [0, _k], [_k, _n])[tf.newaxis, :, :, tf.newaxis]  # [1 K N 1]
+            tf.summary.image('att', fig, step=step)
+
+        return rslt, assignment
+
+    @tf.function
+    def row_distance(self, tensor_a, tensor_b):
+        """
+        :param tensor_a: [N1 D]
+        :param tensor_b: [N2 D]
+        :return: [N1 N2]
+        """
+        na = tf.reduce_sum(tf.square(tensor_a), 1)
+        nb = tf.reduce_sum(tf.square(tensor_b), 1)
+
+        # na as a row and nb as a column vectors
+        na = tf.reshape(na, [-1, 1])
+        nb = tf.reshape(nb, [1, -1])
+
+        rslt = tf.sqrt(tf.maximum(na - 2 * tf.matmul(tensor_a, tensor_b, False, True) + nb, 0.0))
+
+        return rslt
 
 
 def get_assigner(conf) -> tf.keras.Model:
     cases = {
-        'soft': SoftAssigner
+        'soft': SoftAssigner,
+        'gcn': GCNAssigner
     }
     Rslt = cases.get(conf.assigner)
 
