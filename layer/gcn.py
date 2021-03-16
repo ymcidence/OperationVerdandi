@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import tensorflow as tf
 
 OVERFLOW_MARGIN = 1e-8
+import numpy as np
 
 
 class GCNLayer(tf.keras.layers.Layer):
@@ -42,7 +43,7 @@ class GCNLayer(tf.keras.layers.Layer):
         """
         graph_size = tf.shape(adjacency)[0]
         d = adjacency @ tf.ones([graph_size, 1])
-        d_inv_sqrt = tf.pow(d + OVERFLOW_MARGIN, -0.5)
+        d_inv_sqrt = 1 / (tf.pow(d, 0.5) + OVERFLOW_MARGIN)
         d_inv_sqrt = tf.eye(graph_size) * d_inv_sqrt
         laplacian = d_inv_sqrt @ adjacency @ d_inv_sqrt
         return laplacian

@@ -89,6 +89,7 @@ class GCNAssigner(Assigner):
         ])
         self.k = conf.k
         self.temp = conf.gumbel_temp
+        self.d_model = conf.d_model
         self.bn = tf.keras.layers.BatchNormalization()
 
     def call(self, context, sample, training=True, step=-1):
@@ -98,7 +99,7 @@ class GCNAssigner(Assigner):
         projected = tf.concat([_c, _s], axis=0)
         all_samples = tf.concat([context, sample], axis=0)
 
-        dist = self.row_distance(projected, projected)  # [N+K N+K]
+        dist = self.row_distance(projected, projected) / np.sqrt(self.d_model)  # [N+K N+K]
         adj = tf.exp(-dist / self.temp)
         gcn_rslt = self.gcn(all_samples, adj)
 
@@ -108,7 +109,7 @@ class GCNAssigner(Assigner):
 
         # rslt = tf.slice(gcn_rslt, [0, 0], [_k, _d])
 
-        rslt = gcn_rslt#[:_k, :]
+        rslt = gcn_rslt  # [:_k, :]
         assignment = tf.slice(adj, [_k, 0], [_n, _k])  # [N K]
 
         if step > 0:
