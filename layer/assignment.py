@@ -78,13 +78,20 @@ class GCNAssigner(Assigner):
     def __init__(self, conf):
         super().__init__()
         self.gcn = GCNLayer(conf.d_model)
-        self.projection = tf.keras.layers.Dense(conf.d_model)
+        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
+        self.fc_2 = tf.keras.layers.Dense(conf.d_model)
         self.k = conf.k
         self.temp = conf.gumbel_temp
+        self.bn = tf.keras.layers.BatchNormalization()
 
     def call(self, context, sample, training=True, step=-1):
+        sample = self.bn(sample, training=training)
+        _s = self.fc_1(sample)
+        _c = self.fc_2(context)
+        projected = tf.concat([_c, _s], axis=0)
         all_samples = tf.concat([context, sample], axis=0)
-        projected = self.projection(all_samples)
+
+
         dist = self.row_distance(projected, projected)  # [N+K N+K]
         adj = tf.exp(-dist / self.temp)
         gcn_rslt = self.gcn(all_samples, adj)
