@@ -20,7 +20,8 @@ def simclr_loss(feat_1, feat_2, temp, k=None):
     :param feat_1: [N D]
     :param feat_2: [N D]
     :param temp: temperature
-    :param k: masking some parts
+    :param k: if not none, the function only considers the first k rows in the two inputs, otherwise performing
+    identical to the original one
     :return:
     """
     sim_11 = cosine_sim(feat_1, feat_1) / temp
