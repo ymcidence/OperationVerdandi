@@ -121,7 +121,7 @@ class GCNAssigner(Assigner):
 
         # rslt = tf.slice(gcn_rslt, [0, 0], [_k, _d])
 
-        rslt = gcn_rslt[:_k, :]
+        rslt = gcn_rslt  # [:_k, :]
         assignment = tf.slice(all_adj, [_k, 0], [_n, _k])  # [N K]
 
         if step > 0:
