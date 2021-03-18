@@ -8,3 +8,16 @@ def get_encoder(conf):
                                      tf.keras.layers.ReLU(),
                                      tf.keras.layers.Dense(conf.d_model)])
         return model
+
+    if conf.encoder == 'rand_linear':
+        model = get_stochastic_linear(conf)
+        return model
+
+
+def get_stochastic_linear(conf):
+    model = tf.keras.Sequential([tf.keras.layers.GaussianNoise(.5),
+                                 tf.keras.layers.Dense(conf.d_model * 2),
+                                 tf.keras.layers.ReLU(),
+                                 tf.keras.layers.GaussianNoise(.5),
+                                 tf.keras.layers.Dense(conf.d_model)])
+    return model
