@@ -38,7 +38,7 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
     with tf.GradientTape() as tape:
         agg_1, assign_1, feat_1 = model(feat_1, step=_step)
         agg_2, assign_2, feat_2 = model(feat_2)
-        agg_2 = tf.stop_gradient(agg_2)
+        # agg_2 = tf.stop_gradient(agg_2)
         loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
 
         # for l in model.losses:
