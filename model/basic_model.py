@@ -36,8 +36,8 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
     _step = -1 if step % 100 > 0 else step
 
     with tf.GradientTape() as tape:
-        agg_1, assign_1, feat_1 = model(feat_1, step=_step)
-        agg_2, assign_2, feat_2 = model(feat_1)
+        agg_1, assign_1, _feat_1 = model(feat_1, step=_step)
+        agg_2, assign_2, _feat_2 = model(feat_1)
         loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
 
         # loss_crack_1 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_1, 10), assign_1)
@@ -49,10 +49,10 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
         opt.apply_gradients(zip(gradients, model.trainable_variables))
 
     if _step > 0:
-        label = tf.concat([label_1, label_2], axis=0)
+        label = tf.concat([label_1, label_1], axis=0)
         pred = tf.concat([assign_1, assign_2], axis=0)
         pred = tf.argmax(pred, axis=1)
-        feat = tf.concat([feat_1, feat_2], axis=0)
+        feat = tf.concat([_feat_1, _feat_2], axis=0)
 
         acc, nmi, ari, sc = hook(feat.numpy(), label.numpy(), pred.numpy())
 
