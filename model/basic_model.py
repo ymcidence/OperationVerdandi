@@ -37,19 +37,19 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
 
     with tf.GradientTape() as tape:
         agg_1, assign_1, _feat_1 = model(feat_1, step=_step)
-        agg_2, assign_2, _feat_2 = model(feat_1)
+        agg_2, assign_2, _feat_2 = model(feat_2)
         loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
 
-        # loss_crack_1 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_1, 10), assign_1)
-        # loss_crack_2 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_2, 10), assign_2)
-        # loss = loss + tf.reduce_mean(loss_crack_1) + tf.reduce_mean(loss_crack_2)
+        loss_crack_1 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_1, 10), assign_1)
+        loss_crack_2 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_2, 10), assign_2)
+        loss = loss + tf.reduce_mean(loss_crack_1) + tf.reduce_mean(loss_crack_2)
 
         gradients = tape.gradient(loss, model.trainable_variables)
 
         opt.apply_gradients(zip(gradients, model.trainable_variables))
 
     if _step > 0:
-        label = tf.concat([label_1, label_1], axis=0)
+        label = tf.concat([label_1, label_2], axis=0)
         pred = tf.concat([assign_1, assign_2], axis=0)
         pred = tf.argmax(pred, axis=1)
         feat = tf.concat([_feat_1, _feat_2], axis=0)
