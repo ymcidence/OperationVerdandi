@@ -40,7 +40,7 @@ def main():
             if i == 0:
                 print(model.summary())
 
-            if i % 1 == 0:
+            if i % 50 == 0:
                 print('iter {}, loss {}'.format(i, loss))
 
             if i % 5000 == 0 and i > 0:
