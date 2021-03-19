@@ -40,9 +40,9 @@ def step_train(conf, data_1: dict, data_2: dict, model: BasicModel, opt: tf.kera
         agg_2, assign_2, _feat_2 = model(feat_2)
         loss, _, _ = simclr_loss(agg_1, agg_2, conf.temp)
 
-        loss_crack_1 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_1, 10), assign_1)
-        loss_crack_2 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_2, 10), assign_2)
-        loss = loss + tf.reduce_mean(loss_crack_1) + tf.reduce_mean(loss_crack_2)
+        # loss_crack_1 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_1, 10), assign_1)
+        # loss_crack_2 = tf.nn.softmax_cross_entropy_with_logits(tf.one_hot(label_2, 10), assign_2)
+        # loss = loss + tf.reduce_mean(loss_crack_1) + tf.reduce_mean(loss_crack_2)
 
         gradients = tape.gradient(loss, model.trainable_variables)
 
