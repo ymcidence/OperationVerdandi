@@ -26,12 +26,15 @@ def acc(semantic, pred):
     :return:
     """
     assert pred.size == semantic.size
-    d = max(pred.max(), semantic.max()) + 1
-    w = np.zeros((d, d), dtype=np.int64)
-    for i in range(pred.size):
-        w[pred[i], semantic[i]] += 1
-    ind = linear_assignment(np.max(w) - w)
-    return sum([w[i, j] for i, j in zip(ind[0], ind[1])]) * 1.0 / pred.size, w
+    try:
+        d = max(pred.max(), semantic.max()) + 1
+        w = np.zeros((d, d), dtype=np.int64)
+        for i in range(pred.size):
+            w[pred[i], semantic[i]] += 1
+        ind = linear_assignment(np.max(w) - w)
+        return sum([w[i, j] for i, j in zip(ind[0], ind[1])]) * 1.0 / pred.size, w
+    except ValueError:
+        return 0
 
 
 def nmi(semantic, pred):
