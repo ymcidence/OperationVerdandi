@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import tensorflow as tf
 from layer.encodec import get_encoder
-# from layer.gcn import GCNLayer
+from layer.gcn import GCNLayer
 from layer.functional import vq, row_distance
 from layer.gumbel import gumbel_softmax
 from util.eval import hook
@@ -70,6 +70,38 @@ class GumbelModel(AEModel):
         assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
         gumbel_feat = adj @ self.context
         pred = self.decoder(gumbel_feat, training=training)
+        if training:
+            loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
+
+            loss = loss_ae
+
+            self.add_loss(loss)
+
+            if step > 0:
+                tf.summary.scalar('loss', loss, step=step)
+                tf.summary.scalar('loss_ae', loss_ae, step=step)
+        return pred, assignment, feat
+
+
+class TBHModel(AEModel):
+    def __init__(self, conf):
+        super().__init__(conf)
+        self.fc = tf.keras.layers.Dense(conf.k)
+        self.gcn = GCNLayer(conf.d_model)
+
+    def call(self, inputs, training=True, mask=None, step=-1):
+        feat = self.encoder(inputs, training=training)
+        logits = self.fc(feat)
+        gumbel = gumbel_softmax(logits, self.conf.gumbel_temp)
+        assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
+
+        _g = tf.nn.l2_normalize(gumbel, axis=1)  # [N K]
+        adj = tf.matmul(_g, _g, transpose_b=True)
+
+        _gcn = self.gcn(feat, adj)
+
+        pred = self.decoder(_gcn, training=training)
+
         if training:
             loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
 
