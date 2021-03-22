@@ -36,9 +36,9 @@ class AEModel(tf.keras.Model):
         # assignment = tf.argmin(assignment, axis=1)
         if training:
             indexed_emb = assignment @ self.context
-            loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
-            loss_vq_1 = tf.reduce_mean(tf.reduce_sum(tf.square(tf.stop_gradient(feat) - indexed_emb), axis=1) / 2.)
-            loss_vq_2 = tf.reduce_mean(tf.reduce_sum(tf.square(tf.stop_gradient(indexed_emb) - feat), axis=1) / 2.)
+            loss_ae = tf.reduce_sum(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
+            loss_vq_1 = tf.reduce_sum(tf.reduce_sum(tf.square(tf.stop_gradient(feat) - indexed_emb), axis=1) / 2.)
+            loss_vq_2 = tf.reduce_sum(tf.reduce_sum(tf.square(tf.stop_gradient(indexed_emb) - feat), axis=1) / 2.)
 
             loss = loss_ae + loss_vq_1 + .25 * loss_vq_2
 
