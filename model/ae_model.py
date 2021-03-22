@@ -4,6 +4,7 @@ import tensorflow as tf
 from layer.encodec import get_encoder
 # from layer.gcn import GCNLayer
 from layer.functional import vq, row_distance
+from layer.gumbel import gumbel_softmax
 from util.eval import hook
 
 
@@ -16,6 +17,7 @@ class AEModel(tf.keras.Model):
         self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model], stddev=.5), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
         self.k = conf.k
+        self.conf = conf
 
         # self.gcn = GCNLayer(conf.d_model)
         self.decoder = tf.keras.Sequential([
@@ -39,7 +41,7 @@ class AEModel(tf.keras.Model):
 
         if training:
             indexed_emb = one_hot @ self.context
-            loss_ae = tf.reduce_sum(tf.reduce_mean(tf.square(pred - inputs), axis=1) / 2.)
+            loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
             loss_vq_1 = tf.reduce_mean(tf.reduce_mean(tf.square(tf.stop_gradient(feat) - indexed_emb), axis=1) / 2.)
             loss_vq_2 = tf.reduce_mean(tf.reduce_mean(tf.square(tf.stop_gradient(indexed_emb) - feat), axis=1) / 2.)
 
@@ -55,6 +57,30 @@ class AEModel(tf.keras.Model):
 
         return pred, assignment, feat
 
+
+class GumbelModel(AEModel):
+    def __init__(self, conf):
+        super().__init__(conf)
+        self.fc = tf.keras.layers.Dense(conf.d_model)
+
+    def call(self, inputs, training=True, mask=None, step=-1):
+        feat = self.encoder(inputs, training=training)
+        logits = tf.matmul(feat, self.fc(self.context), transpose_b=True)
+        adj = gumbel_softmax(logits, self.conf.gumbel_temp)
+        assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
+        gumbel_feat = adj @ self.context
+        pred = self.decoder(gumbel_feat, training=training)
+        if training:
+            loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
+
+            loss = loss_ae
+
+            self.add_loss(loss)
+
+            if step > 0:
+                tf.summary.scalar('loss', loss, step=step)
+                tf.summary.scalar('loss_ae', loss_ae, step=step)
+        return pred, assignment, feat
 
 def step_train(conf, data_1: dict, data_2: dict, model: AEModel, opt: tf.keras.optimizers.Optimizer, step):
     feat_1 = data_1['image']
