@@ -112,8 +112,7 @@ class TBHModel(AEModel):
             if step > 0:
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('loss_ae', loss_ae, step=step)
-                tf.summary.image('adj', adj[tf.newaxis, :, :, tf.newaxis], step=step)
-                tf.summary.histogram('adj', tf.reshape(adj, [-1]), step=step)
+                tf.summary.image('adj_hist', tf.reshape(adj, [-1]), step=step)
         return pred, assignment, feat
 
 
