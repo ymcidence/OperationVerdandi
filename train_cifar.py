@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from time import gmtime, strftime
 from meta import ROOT_PATH
-from model.ae_model import AEModel as Model, step_train
+from model.ae_model import GumbelModel as Model, step_train
 from util.data.loader import load_data
 from util.config import parser
 
