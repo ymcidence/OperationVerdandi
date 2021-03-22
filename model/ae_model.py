@@ -108,7 +108,7 @@ class TBHModel(AEModel):
             loss = loss_ae + tf.reduce_mean(self.context) * 0
 
             self.add_loss(loss)
-            n = tf.shape(feat)[0]
+            n = tf.cast(tf.shape(feat)[0], tf.float32)
 
             if step > 0:
                 tf.summary.scalar('loss', loss, step=step)
