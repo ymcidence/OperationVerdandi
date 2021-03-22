@@ -65,7 +65,7 @@ class GumbelModel(AEModel):
 
     def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
-        logits = tf.matmul(feat, self.context, transpose_b=True)
+        logits = row_distance(feat, self.context) / self.conf.d_model * -1.
         adj = gumbel_softmax(logits, self.conf.gumbel_temp)
         assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
         gumbel_feat = adj @ self.context
