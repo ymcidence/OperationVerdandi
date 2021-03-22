@@ -5,6 +5,7 @@ import tensorflow as tf
 from layer.gcn import GCNLayer
 from layer.gumbel import gumbel_softmax
 from layer.encodec import get_encoder
+from layer.simclr_loss import simclr_loss
 from util.eval import hook
 
 
@@ -37,7 +38,6 @@ class TBHModel(tf.keras.Model):
 
         _gcn = tf.nn.sigmoid(self.gcn(feat, adj))
 
-
         pred = self.decoder(_gcn, training=training)
 
         if training:
@@ -53,7 +53,7 @@ class TBHModel(tf.keras.Model):
                 tf.summary.image('adj', adj[tf.newaxis, :, :, tf.newaxis], step=step)
                 tf.summary.histogram('adj_hist', tf.reshape(adj, [-1]), step=step)
                 tf.summary.scalar('adj_sum', tf.reduce_sum(adj) / n, step=step)
-        return gumbel, assignment, feat
+        return gumbel, assignment, feat, logits
 
 
 class AdvModel(tf.keras.Model):
@@ -64,7 +64,7 @@ class AdvModel(tf.keras.Model):
         self.conf = conf
 
     def call(self, inputs, training=True, mask=None, step=-1):
-        gumbel, assignment, feat = self.model(inputs, training=training, step=step)
+        gumbel, assignment, feat, logits = self.model(inputs, training=training, step=step)
 
         sample = tf.ones_like(gumbel, dtype=tf.float32) / self.conf.k  # [N K]
         sample = tf.random.categorical(tf.math.log(sample), 1, dtype=tf.int32)
@@ -73,13 +73,22 @@ class AdvModel(tf.keras.Model):
         dis_sample = self.dis(sample)
 
         if training:
+
+            logits_1, logits_2 = tf.split(logits, 2, axis=0)
+            feat_1, feat_2 = tf.split(feat, 2, axis=0)
+
+            agg_1 = self.agg(logits_1, feat_1)
+            agg_2 = self.agg(logits_2, feat_2)
+
+            loss_clr, _, _ = simclr_loss(agg_1, agg_2, self.conf.temp)
             loss_ae = self.model.losses[0]
-            actor_loss = loss_ae - self.adv_loss(dis_sample, dis)
+            actor_loss = loss_ae - self.adv_loss(dis_sample, dis) + loss_clr
             critic_loss = self.adv_loss(dis_sample, dis) * 10
             self.add_loss([actor_loss, critic_loss])
 
             if step > 0:
                 tf.summary.scalar('actor', actor_loss, step=step)
+                tf.summary.scalar('sim_clr', loss_clr, step=step)
                 tf.summary.scalar('critic', critic_loss, step=step)
 
         return gumbel, assignment, feat
@@ -97,14 +106,21 @@ class AdvModel(tf.keras.Model):
     def reconstruction_loss(pred, origin):
         return tf.reduce_mean(tf.nn.l2_loss(pred - origin))
 
+    def agg(self, logits, feat):
+        activation = tf.nn.softmax(tf.transpose(logits) / self.conf.gumbel_temp)  # [K N]
+        return activation @ feat
+
 
 def step_train(conf, data_1: dict, data_2: dict, model: AdvModel, opt_1: tf.keras.optimizers.Optimizer,
                opt_2: tf.keras.optimizers.Optimizer, step):
     feat_1 = data_1['image']
-    # feat_2 = data_2['image']
+    feat_2 = data_2['image']
 
     label_1 = data_1['label']
-    # label_2 = data_2['label']
+    label_2 = data_2['label']
+
+    feat_1 = tf.concat([feat_1, feat_2], axis=0)
+    label_1 = tf.concat([label_1, label_2], axis=0)
 
     _step = -1 if step % 100 > 0 else step
 
