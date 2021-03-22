@@ -32,10 +32,13 @@ class AEModel(tf.keras.Model):
 
         pred = self.decoder(vq_feat, training=training)
 
-        assignment = tf.stop_gradient(row_distance(feat, self.context))
-        # assignment = tf.argmin(assignment, axis=1)
+        assignment = -tf.stop_gradient(row_distance(feat, self.context))
+
+        ind = tf.argmax(assignment, axis=1)
+        one_hot = tf.one_hot(ind, self.k)
+
         if training:
-            indexed_emb = assignment @ self.context
+            indexed_emb = one_hot @ self.context
             loss_ae = tf.reduce_mean(tf.reduce_mean(tf.square(pred - inputs), axis=1) / 2.)
             loss_vq_1 = tf.reduce_mean(tf.reduce_mean(tf.square(tf.stop_gradient(feat) - indexed_emb), axis=1) / 2.)
             loss_vq_2 = tf.reduce_mean(tf.reduce_mean(tf.square(tf.stop_gradient(indexed_emb) - feat), axis=1) / 2.)
@@ -75,7 +78,7 @@ def step_train(conf, data_1: dict, data_2: dict, model: AEModel, opt: tf.keras.o
     if _step > 0:
         label = label_1  # tf.concat([label_1, label_2], axis=0)
         pred = assign_1  # tf.concat([assign_1, assign_2], axis=0)
-        pred = tf.argmax(-pred, axis=1)
+        pred = tf.argmax(pred, axis=1)
         feat = _feat_1  # tf.concat([_feat_1, _feat_2], axis=0)
 
         acc, nmi, ari, sc = hook(feat.numpy(), label.numpy(), pred.numpy())
