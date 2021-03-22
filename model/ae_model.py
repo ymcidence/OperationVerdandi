@@ -24,8 +24,8 @@ class AEModel(tf.keras.Model):
             tf.keras.layers.Dense(2048),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
-            tf.keras.layers.Dense(4096),
-            tf.keras.layers.ReLU()
+            tf.keras.layers.Dense(4096)
+            # tf.keras.layers.ReLU()
         ])
 
     def call(self, inputs, training=True, mask=None, step=-1):
