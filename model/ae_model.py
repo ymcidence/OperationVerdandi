@@ -108,12 +108,14 @@ class TBHModel(AEModel):
             loss = loss_ae + tf.reduce_mean(self.context) * 0
 
             self.add_loss(loss)
+            n = tf.shape(feat)[0]
 
             if step > 0:
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('loss_ae', loss_ae, step=step)
                 tf.summary.image('adj', adj[tf.newaxis, :, :, tf.newaxis], step=step)
                 tf.summary.histogram('adj_hist', tf.reshape(adj, [-1]), step=step)
+                tf.summary.scalar('adj_sum', tf.reduce_sum(adj) / n, step=step)
         return pred, assignment, feat
 
 
