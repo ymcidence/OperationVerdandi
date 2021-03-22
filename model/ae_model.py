@@ -6,6 +6,7 @@ from layer.gcn import GCNLayer
 from layer.functional import vq, row_distance
 from layer.gumbel import gumbel_softmax
 from util.eval import hook
+import numpy as np
 
 
 class AEModel(tf.keras.Model):
@@ -96,9 +97,11 @@ class TBHModel(AEModel):
         assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
 
         _g = tf.nn.l2_normalize(gumbel, axis=1)  # [N K]
-        adj = tf.matmul(_g, _g, transpose_b=True)
+        adj = tf.nn.relu(tf.matmul(_g, _g, transpose_b=True))
 
-        _gcn = self.gcn(feat, adj)
+        # adj = tf.pow(adj, 1.5)
+
+        _gcn = tf.nn.sigmoid(self.gcn(feat, adj))
 
         pred = self.decoder(_gcn, training=training)
 
