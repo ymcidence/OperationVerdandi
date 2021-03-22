@@ -13,7 +13,7 @@ class AEModel(tf.keras.Model):
 
         self.encoder = get_encoder(conf)
 
-        self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model]), trainable=True,
+        self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model], stddev=.5), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
         self.k = conf.k
 
