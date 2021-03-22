@@ -11,7 +11,7 @@ def sample_gumbel(shape, eps=1e-20):
 
 def gumbel_softmax_sample(logits, temperature):
     """ Draw a sample from the Gumbel-Softmax distribution"""
-    y = logits  + sample_gumbel(tf.shape(logits))
+    y = logits + sample_gumbel(tf.shape(logits))
     return tf.nn.softmax(y / temperature)
 
 

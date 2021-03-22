@@ -14,7 +14,7 @@ class AEModel(tf.keras.Model):
 
         self.encoder = get_encoder(conf)
 
-        self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model], stddev=.5), trainable=True,
+        self.context = tf.Variable(initial_value=tf.random.normal([conf.k, conf.d_model]), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
         self.k = conf.k
         self.conf = conf
@@ -61,11 +61,11 @@ class AEModel(tf.keras.Model):
 class GumbelModel(AEModel):
     def __init__(self, conf):
         super().__init__(conf)
-        self.fc = tf.keras.layers.Dense(conf.d_model)
+        # self.fc = tf.keras.layers.Dense(conf.d_model)
 
     def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
-        logits = tf.matmul(feat, self.fc(self.context), transpose_b=True)
+        logits = tf.matmul(feat, self.context, transpose_b=True)
         adj = gumbel_softmax(logits, self.conf.gumbel_temp)
         assignment = gumbel_softmax(logits, self.conf.gumbel_temp, hard=True)
         gumbel_feat = adj @ self.context
@@ -81,6 +81,7 @@ class GumbelModel(AEModel):
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('loss_ae', loss_ae, step=step)
         return pred, assignment, feat
+
 
 def step_train(conf, data_1: dict, data_2: dict, model: AEModel, opt: tf.keras.optimizers.Optimizer, step):
     feat_1 = data_1['image']
