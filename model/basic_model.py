@@ -5,7 +5,6 @@ from layer.encodec import get_encoder
 from layer.assignment import get_assigner
 from layer.simclr_loss import simclr_loss
 from util.eval import hook
-import numpy as np
 
 
 class BasicModel(tf.keras.Model):

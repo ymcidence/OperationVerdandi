@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from time import gmtime, strftime
 from meta import ROOT_PATH
-from model.basic_model import BasicModel, step_train
+from model.ae_model import AEModel as Model, step_train
 from util.data.loader import load_data
 from util.config import parser
 
@@ -24,7 +24,7 @@ def main():
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    model = BasicModel(conf)
+    model = Model(conf)
     data = load_data(conf, training=True)
     data_iter = iter(data)
     opt = tf.keras.optimizers.Adam(1e-4)

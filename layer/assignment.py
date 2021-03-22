@@ -4,6 +4,7 @@ import tensorflow as tf
 from layer.transformer.isab import MultiheadAttentionBlock
 from layer.gumbel import gumbel_softmax
 from layer.gcn import GCNLayer
+from layer.functional import row_distance
 import numpy as np
 
 
@@ -111,7 +112,7 @@ class GCNAssigner(Assigner):
         all_samples = tf.concat([context, sample], axis=0)
         # all_samples = self.fc_3(all_samples, training=training)
 
-        dist = self.row_distance(projected, projected) / self.d_model  # [N+K N+K]
+        dist = row_distance(projected, projected) / self.d_model  # [N+K N+K]
         all_adj = tf.exp(-dist / self.temp, name='adj') + 1e-8
         gcn_rslt = self.gcn(all_samples, all_adj)
 
@@ -132,23 +133,6 @@ class GCNAssigner(Assigner):
 
         return rslt, assignment
 
-    @staticmethod
-    def row_distance(tensor_a, tensor_b):
-        """
-        :param tensor_a: [N1 D]
-        :param tensor_b: [N2 D]
-        :return: [N1 N2]
-        """
-        na = tf.reduce_sum(tf.square(tensor_a), 1)
-        nb = tf.reduce_sum(tf.square(tensor_b), 1)
-
-        # na as a row and nb as a column vectors
-        na = tf.reshape(na, [-1, 1])
-        nb = tf.reshape(nb, [1, -1])
-
-        rslt = na - 2 * tf.matmul(tensor_a, tensor_b, False, True) + nb
-
-        return rslt
 
 
 def get_assigner(conf) -> tf.keras.Model:
