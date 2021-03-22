@@ -105,7 +105,7 @@ class TBHModel(AEModel):
         if training:
             loss_ae = tf.reduce_mean(tf.reduce_sum(tf.square(pred - inputs), axis=1) / 2.)
 
-            loss = loss_ae
+            loss = loss_ae + tf.reduce_mean(self.context) * 0
 
             self.add_loss(loss)
 
