@@ -43,7 +43,7 @@ class ISABModel(tf.keras.Model):
         if training:
             loss_ae = tf.reduce_mean(tf.nn.l2_loss(pred - inputs))
 
-            loss_clr = simclr_loss(h_1, h_2, self.conf.temp)
+            loss_clr, _, _ = simclr_loss(h_1, h_2, self.conf.temp)
 
             loss = loss_ae + loss_clr
 
