@@ -62,7 +62,7 @@ def relative_attention(q, k, v, s, mask):
 
 class MultiHeadAttention(tf.keras.layers.Layer):
 
-    def __init__(self, d_model, num_heads):
+    def __init__(self, d_model, num_heads, dense=True):
         super(MultiHeadAttention, self).__init__()
         self.num_heads = num_heads
         self.d_model = d_model
@@ -74,8 +74,9 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self.wq = tf.keras.layers.Dense(d_model)
         self.wk = tf.keras.layers.Dense(d_model)
         self.wv = tf.keras.layers.Dense(d_model)
-
-        self.dense = tf.keras.layers.Dense(d_model)
+        if dense:
+            self.dense = tf.keras.layers.Dense(d_model)
+        self.is_dense = dense
 
     def split_heads(self, x, batch_size):
         x = tf.reshape(x, (batch_size, -1, self.num_heads, self.depth))
@@ -110,8 +111,11 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 
         concat_attention = tf.reshape(scaled_attention,
                                       (batch_size, -1, self.d_model))  # (batch_size, seq_len_q, d_model)
-
-        output = self.dense(concat_attention)  # (batch_size, seq_len_q, d_model)
+        if self.is_dense:
+            output = self.dense(concat_attention)
+        else:
+            output = concat_attention + tf.squeeze(
+                q) if self.num_heads == 1 else concat_attention  # (batch_size, seq_len_q, d_model)
 
         return output, attention_weights
 
