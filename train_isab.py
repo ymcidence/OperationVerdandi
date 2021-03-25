@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from time import gmtime, strftime
 from meta import ROOT_PATH
-from model.isab_model import ISABModel as Model, step_train
+from model.simple_model import SimpleModel as Model, step_train
 from util.data.loader import load_data
 from util.config import parser
 
@@ -14,7 +14,7 @@ def main():
     conf = parser.parse_args()
 
     time_string = strftime("%a%d%b%Y-%H%M%S", gmtime())
-    result_path = os.path.join(ROOT_PATH, 'result', conf.set_name + 'isab')
+    result_path = os.path.join(ROOT_PATH, 'result', conf.set_name + 'simple')
     task_name = conf.task_name
     save_path = os.path.join(result_path, 'model', task_name + '_' + time_string)
     summary_path = os.path.join(result_path, 'log', task_name + '_' + time_string)
