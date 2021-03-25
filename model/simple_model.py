@@ -53,7 +53,7 @@ class SimpleModel(tf.keras.Model):
 
         assignment = tf.argmax(_assign_n, axis=1)
         if training:
-            loss_clr = simclr_loss(agg_k_1, agg_k_2, temp=self.conf.temp)
+            loss_clr, _, _ = simclr_loss(agg_k_1, agg_k_2, temp=self.conf.temp)
             loss_ae = tf.reduce_mean(tf.square(pred - inputs)) / 2.
             loss = loss_clr + loss_ae
 
