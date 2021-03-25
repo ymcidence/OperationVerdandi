@@ -31,7 +31,7 @@ class SimpleModel(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ self.context  # [N D]
-        agg_n = self.ln_n(agg_n + feat, training=training)
+        agg_n = self.ln_n(agg_n, training=training)
         pred = self.decoder(agg_n, training=training)
 
         # [K N] agg
@@ -43,8 +43,7 @@ class SimpleModel(tf.keras.Model):
             agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
             normalizer = tf.reduce_mean(_assign, axis=1, keepdims=True) + 1e-8  # [K 1]
             agg_k = agg_k / normalizer
-            # noinspection PyTypeChecker
-            agg_k = self.ln_k(agg_k + self.context, training=training)
+            agg_k = self.ln_k(agg_k, training=training)
             return agg_k
 
         assign_k_1, assign_k_2 = tf.split(assign_k, 2, axis=1)
