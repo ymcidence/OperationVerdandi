@@ -31,7 +31,7 @@ class SimpleModel(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ self.context  # [N D]
-        agg_n = self.ln_n(agg_n, training=training)
+        agg_n = self.ln_n(agg_n + feat, training=training)
         pred = self.decoder(agg_n, training=training)
 
         # [K N] agg
