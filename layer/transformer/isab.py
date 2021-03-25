@@ -57,7 +57,7 @@ class InducedSetAttentionBlock(tf.keras.layers.Layer):
         :return:
         """
         h, att_kn = self.mab1(i, x, training)  # []
-        out, att_nk = self.mab2(x, h, training)
+        out, att_nk = self.mab2(x, i, training)
         if squeeze:
             h = tf.squeeze(h)
             out = tf.squeeze(out)
