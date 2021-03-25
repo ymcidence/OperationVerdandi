@@ -11,6 +11,7 @@ class SimpleModel(tf.keras.Model):
     def __init__(self, conf):
         super().__init__()
         self.conf = conf
+        self.gumbel_temp = conf.gumbel_temp
 
         self.context = tf.Variable(tf.initializers.GlorotUniform()([conf.k, conf.d_model]), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
