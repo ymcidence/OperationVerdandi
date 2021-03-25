@@ -47,7 +47,7 @@ class SimpleModel(tf.keras.Model):
             return agg_k
 
         assign_k_1, assign_k_2 = tf.split(assign_k, 2, axis=1)
-        feat_1, feat_2 = tf.split(feat, axis=0)
+        feat_1, feat_2 = tf.split(feat, 2, axis=0)
         agg_k_1 = split_agg(assign_k_1, feat_1)
         agg_k_2 = split_agg(assign_k_2, feat_2)
 
