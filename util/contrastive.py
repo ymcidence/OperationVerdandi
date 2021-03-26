@@ -67,7 +67,7 @@ def update_queue(queue: tf.Tensor, value: tf.Tensor) -> tf.Tensor:
     """
     _q = tf.concat([value, queue], axis=0)
     queue_size = tf.shape(queue)[0]
-    return _q[:queue_size, :]
+    return tf.stop_gradient(_q[:queue_size, :])
 
 
 def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, temp):
@@ -85,7 +85,7 @@ def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, te
     mask_1 = tf.eye(k)
     mask_2 = tf.zeros([k, k])
     mask_3 = tf.eye(k)
-    mask_3 = tf.tile(mask_3, [1, q / k])
+    mask_3 = tf.tile(mask_3, [1, int(q / k)])
     mask = tf.concat([mask_1, mask_2, mask_3], axis=1)
 
     label_1 = tf.zeros([k, k])
@@ -101,5 +101,5 @@ def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, te
     logit = logit - mask * LARGE_NUM
 
     loss = tf.nn.softmax_cross_entropy_with_logits(label, logit)
-    loss = tf.reduce_sum(loss * mask) / tf.reduce_sum(mask)
+    loss = tf.reduce_mean(loss)
     return loss
