@@ -70,8 +70,17 @@ def update_queue(queue: tf.Tensor, value: tf.Tensor) -> tf.Tensor:
     return _q[:queue_size, :]
 
 
-def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q):
-    l_pos = tf.einsum('nd,nd->n', query, key)[:, None]
+def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, temp):
+    """
+
+    :param query: [K D] normalized
+    :param key: [K D] normalized
+    :param queue: [Q D] normalized
+    :param k: length of a batch
+    :param q: length of the queue
+    :param temp: temperature
+    :return:
+    """
 
     mask_1 = tf.eye(k)
     mask_2 = tf.zeros([k, k])
@@ -83,4 +92,14 @@ def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q):
     label_2 = tf.eye(k)
     label_3 = tf.zeros([k, q])
 
-    label = tf.concat([label_1, label_2, label_3], axis=1)
+    label = tf.concat([label_1, label_2, label_3], axis=1)  # [K K+K+Q]
+
+    candidate = tf.concat([query, key, queue], axis=0)  # [K+K+Q D]
+
+    logit = tf.matmul(query, candidate, transpose_b=True) / temp
+
+    logit = logit - mask * LARGE_NUM
+
+    loss = tf.nn.softmax_cross_entropy_with_logits(label, logit)
+    loss = tf.reduce_sum(loss * mask) / tf.reduce_sum(mask)
+    return loss
