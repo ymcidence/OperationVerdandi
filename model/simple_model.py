@@ -16,7 +16,7 @@ class SimpleModel(tf.keras.Model):
         self.q = conf.k * 20
         self.k = conf.k
 
-        self.context = tf.Variable(tf.initializers.GlorotUniform()([conf.k, conf.d_model]), trainable=True,
+        self.context = tf.Variable(tf.initializers.GlorotNormal()([conf.k, conf.d_model]), trainable=True,
                                    dtype=tf.float32, name='ContextEmb')
         self.encoder = get_encoder(conf)
         self.ln_n = tf.keras.layers.LayerNormalization(epsilon=1e-6)
