@@ -13,7 +13,7 @@ class SimpleModel(tf.keras.Model):
         super().__init__()
         self.conf = conf
         self.gumbel_temp = conf.gumbel_temp
-        self.q = conf.k * 20
+        self.q = conf.k * conf.q
         self.k = conf.k
 
         self.context = tf.Variable(tf.initializers.GlorotNormal()([conf.k, conf.d_model]), trainable=True,

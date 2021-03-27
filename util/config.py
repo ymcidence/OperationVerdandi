@@ -14,3 +14,4 @@ parser.add_argument('-g', '--gumbel_temp', default=0.3, type=float,
 parser.add_argument('-n', '--set_name', default='cifar_feat', help='dataset')
 parser.add_argument('-tn', '--task_name', default='default', help='task name')
 parser.add_argument('-sh', '--shuffle', default=60000)
+parser.add_argument('-q', '--q', default=20)
