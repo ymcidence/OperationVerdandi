@@ -18,7 +18,7 @@ class SimpleModel(tf.keras.Model):
 
         _context = tf.Variable(tf.initializers.GlorotNormal()([conf.k, conf.d_model]), trainable=True,
                                dtype=tf.float32, name='ContextEmb')
-        self.context = tf.nn.l2_normalize(_context)
+        self.context = _context
         self.encoder = get_encoder(conf)
         # self.ln_n = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         # self.ln_k = tf.keras.layers.LayerNormalization(epsilon=1e-6)
@@ -33,19 +33,19 @@ class SimpleModel(tf.keras.Model):
 
     def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
-        feat = tf.nn.l2_normalize(feat)
+        # feat = tf.nn.l2_normalize(feat)
 
         # [N K] agg
         _kn = tf.matmul(self.context, feat, transpose_b=True)  # [K N]
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ self.context  # [N D]
-        # agg_n = self.ln_n(agg_n, training=training)
+        agg_n = self.ln_n(agg_n, training=training)
         pred = self.decoder(agg_n, training=training)
 
         # [K N] agg
         heat_map = _kn
-        eps = tf.random.uniform(tf.shape(heat_map), minval=.3, maxval=.7)  # [K N]
+        eps = tf.random.uniform(tf.shape(heat_map), minval=0, maxval=1)  # [K N]
         assign_k, _ = binary_activation(heat_map, eps)  # [K N]
 
         def split_agg(_assign, _feat):
