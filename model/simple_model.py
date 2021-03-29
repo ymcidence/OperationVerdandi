@@ -32,12 +32,14 @@ class SimpleModel(tf.keras.Model):
 
     def call(self, inputs, training=True, mask=None, step=-1):
         feat = self.encoder(inputs, training=training)
+        feat = tf.nn.l2_normalize(feat)
+        context = tf.nn.l2_normalize(self.context)
 
         # [N K] agg
-        _kn = tf.matmul(self.context, feat, transpose_b=True)  # [K N]
+        _kn = tf.matmul(context, feat, transpose_b=True)  # [K N]
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
-        agg_n = assign_n @ self.context  # [N D]
+        agg_n = assign_n @ context  # [N D]
         agg_n = self.ln_n(agg_n, training=training)
         pred = self.decoder(agg_n, training=training)
 
@@ -47,7 +49,7 @@ class SimpleModel(tf.keras.Model):
         assign_k, _ = binary_activation(heat_map, eps)  # [K N]
 
         def split_agg(_assign, _feat):
-            agg_k = _assign @ tf.nn.l2_normalize(_feat)  # [K D] note that this aggregation is still unnormalized
+            agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
             normalizer = tf.reduce_mean(_assign, axis=1, keepdims=True) + 1e-8  # [K 1]
             agg_k = agg_k / normalizer
             agg_k = tf.nn.l2_normalize(agg_k)  # self.ln_k(agg_k, training=training)
