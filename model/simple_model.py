@@ -52,7 +52,7 @@ class SimpleModel(tf.keras.Model):
             agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
             normalizer = tf.reduce_mean(_assign, axis=1, keepdims=True) + 1e-8  # [K 1]
             agg_k = agg_k / normalizer
-            agg_k = tf.nn.l2_normalize(agg_k)  # self.ln_k(agg_k, training=training)
+            # agg_k = tf.nn.l2_normalize(agg_k)  # self.ln_k(agg_k, training=training)
             return agg_k
 
         assign_k_1, assign_k_2 = tf.split(assign_k, 2, axis=1)
