@@ -20,7 +20,7 @@ class SimpleModel(tf.keras.Model):
                                dtype=tf.float32, name='ContextEmb')
         self.context = _context
         self.encoder = get_encoder(conf)
-        # self.ln_n = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.ln_n = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         # self.ln_k = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.decoder = tf.keras.Sequential([
             tf.keras.layers.Dense(2048, activation=tf.nn.relu),
