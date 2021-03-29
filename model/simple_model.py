@@ -45,7 +45,7 @@ class SimpleModel(tf.keras.Model):
 
         # [K N] agg
         heat_map = _kn
-        eps = tf.random.uniform(tf.shape(heat_map), minval=.3, maxval=.7)  # [K N]
+        eps = tf.random.uniform(tf.shape(heat_map), minval=-0.5, maxval=0.5) + 0.5  # [K N]
         # eps = tf.ones_like(heat_map, dtype=tf.float32) / 2
         assign_k, _ = binary_activation(heat_map, eps)  # [K N]
 
