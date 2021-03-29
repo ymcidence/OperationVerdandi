@@ -45,8 +45,8 @@ class SimpleModel(tf.keras.Model):
 
         # [K N] agg
         heat_map = _kn
-        # eps = tf.random.uniform(tf.shape(heat_map), minval=0, maxval=1)  # [K N]
-        eps = tf.ones_like(heat_map, dtype=tf.float32) / 2
+        eps = tf.random.uniform(tf.shape(heat_map), minval=.3, maxval=.7)  # [K N]
+        # eps = tf.ones_like(heat_map, dtype=tf.float32) / 2
         assign_k, _ = binary_activation(heat_map, eps)  # [K N]
 
         def split_agg(_assign, _feat):
