@@ -47,7 +47,8 @@ class SimpleModel(tf.keras.Model):
         heat_map = _kn
         eps = tf.random.uniform(tf.shape(heat_map), minval=-0.5, maxval=0.5) + 0.5  # [K N]
         # eps = tf.ones_like(heat_map, dtype=tf.float32) / 2
-        assign_k, _ = binary_activation(heat_map, eps)  # [K N]
+        # assign_k, _ = binary_activation(heat_map, eps)  # [K N]
+        assign_k = tf.transpose(assign_n)
 
         def split_agg(_assign, _feat):
             agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
