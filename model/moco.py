@@ -103,6 +103,9 @@ class MoCo(tf.keras.Model):
             tf.summary.image('adj_nk', assign_n[tf.newaxis, :, :, tf.newaxis] * 255, step=step)
             tf.summary.image('adj_kn', assign_k[tf.newaxis, :, :, tf.newaxis] * 255, step=step)
 
+            tf.summary.histogram('assign_n', assignment, step=step)
+            tf.summary.histogram('assign_k', assign_k, step=step)
+
         return assignment, agg_n, agg_k
 
 
