@@ -58,7 +58,7 @@ class MoCo(tf.keras.Model):
             queue = tf.nn.l2_normalize(queue)
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
 
-            loss = loss_n + loss_k
+            loss = loss_n + 0 * loss_k
 
             self.add_loss(loss)
 
@@ -87,7 +87,7 @@ class MoCo(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n) + tf.nn.l2_normalize(self.fc_1(feat))
+        agg_n = tf.nn.l2_normalize(agg_n) * 0 + tf.nn.l2_normalize(self.fc_1(feat))
         agg_n = tf.nn.l2_normalize(agg_n)
 
         # [K N] agg
