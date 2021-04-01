@@ -40,11 +40,10 @@ class MoCo(tf.keras.Model):
         _queue_k = tf.Variable(tf.initializers.GlorotUniform()([self.q, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueK')
         self.queue_k = tf.stop_gradient(tf.nn.l2_normalize(_queue_k))
-        self.aug = Augment(conf)
 
     def call(self, inputs, training=True, mask=None, step=-1):
-        x_1 = self.aug(inputs, training=training)
-        x_2 = self.aug(inputs, training=training)
+        x_1 = inputs['image_1']
+        x_2 = inputs['image_2']
 
         feat_1 = self.base_1(x_1, training=training)
         feat_2 = self.base_2(x_2, training=training)
@@ -108,12 +107,12 @@ class MoCo(tf.keras.Model):
 
 
 def step_train(conf, data: dict, model: MoCo, opt: tf.keras.optimizers.Optimizer, step):
-    feat = data['image']
+    # feat = data['image']
     label = data['label']
     _step = -1 if step % 100 > 0 else step
 
     with tf.GradientTape() as tape:
-        assignment, agg_n, agg_k = model(feat, step=_step)
+        assignment, agg_n, agg_k = model(data, step=_step)
         loss = model.losses[0]
 
         gradients = tape.gradient(loss, model.trainable_variables)
@@ -124,7 +123,7 @@ def step_train(conf, data: dict, model: MoCo, opt: tf.keras.optimizers.Optimizer
     model.update_momentum()
 
     if _step > 0:
-        acc, nmi, ari, sc = hook(feat.numpy(), label.numpy(), assignment.numpy())
+        acc, nmi, ari, sc = hook(agg_n.numpy(), label.numpy(), assignment.numpy())
 
         tf.summary.scalar('eval/nmi', nmi, step)
         tf.summary.scalar('eval/acc', acc, step)

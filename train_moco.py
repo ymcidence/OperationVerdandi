@@ -25,7 +25,7 @@ def main():
         os.makedirs(save_path)
 
     model = Model(conf)
-    data = load_data(conf, training=True)
+    data = load_data(conf, training=True, aug=True)
     data_iter = iter(data)
     opt = tf.keras.optimizers.Adam(1e-4)
     writer = tf.summary.create_file_writer(summary_path)

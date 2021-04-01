@@ -65,7 +65,7 @@ class Augment(object):
         return x
 
     def _resize(self, x):
-        x = tf.image.resize(x, (self.args.img_size, self.args.img_size))
+        x = tf.image.resize(x, [self.img_size[0], self.img_size[1]])
         x = tf.saturate_cast(x, tf.uint8)
         return x
 
@@ -137,3 +137,22 @@ class Augment(object):
             return self._augmentv1(x, self.img_size)
         else:
             return self._standardize(x)
+
+
+def test():
+    from util.data.loader import load_cifar100
+    from argparse import Namespace
+    data = load_cifar100()
+    d = data['train']
+    d = d.batch(5)
+    i = iter(d)
+    batch = next(i)
+    conf = {'set_name': 'cifar100'}
+    conf = Namespace(**conf)
+    aug = Augment(conf)
+    aug(batch['image'])
+    print('hehe')
+
+
+if __name__ == '__main__':
+    test()
