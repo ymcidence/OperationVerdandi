@@ -66,7 +66,7 @@ class MoCo(tf.keras.Model):
                 tf.summary.scalar('loss_k', loss_k, step=step)
                 tf.summary.scalar('loss_n', loss_n, step=step)
 
-        return assign_1, feat_1, agg_n_2, agg_k_2
+        return assign_1, agg_n_2, agg_k_2
 
     def update_queues(self, new_n, new_k):
         self.queue_n = update_queue(self.queue_n, new_n)
