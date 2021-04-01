@@ -115,7 +115,7 @@ def step_train(conf, data: dict, model: MoCo, opt: tf.keras.optimizers.Optimizer
         assignment, agg_n, agg_k = model(data, step=_step)
         loss = model.losses[0]
 
-        gradients = tape.gradient(loss, model.trainable_variables)
+        gradients = tape.gradient(loss, model.base_1.trainable_variables)
 
         opt.apply_gradients(zip(gradients, model.trainable_variables))
 
