@@ -107,7 +107,7 @@ def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, te
 
 def moco_loss(query, key, queue, temp):
     l_pos = tf.einsum('nc,nc->n', query, tf.stop_gradient(key))[:, tf.newaxis]
-    l_neg = tf.einsum('nc,ck->nk', query, queue)
+    l_neg = tf.einsum('nc,lc->nl', query, queue)
     logits = tf.concat([l_pos, l_neg], axis=1)
     logits /= temp
     ones = tf.ones_like(l_pos, dtype=tf.float32)[:, tf.newaxis]
