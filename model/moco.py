@@ -32,6 +32,7 @@ class MoCo(tf.keras.Model):
         self.gumbel_temp = conf.gumbel_temp
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
+        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
 
@@ -82,7 +83,7 @@ class MoCo(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n)
+        agg_n = tf.nn.l2_normalize(agg_n + self.fc_1(feat) * 0.1)
 
         # [K N] agg
 
