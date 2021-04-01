@@ -91,7 +91,7 @@ class MoCo(tf.keras.Model):
 
         # [K N] agg
 
-        heat_map = _kn
+        heat_map = tf.transpose(assign_n)
         eps = tf.random.uniform(tf.shape(heat_map), minval=-0.5, maxval=0.5) * stochastic + 0.5  # [K N]
         assign_k, _ = binary_activation(heat_map, eps)
 
