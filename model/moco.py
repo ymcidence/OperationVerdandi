@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 
 import tensorflow as tf
 from layer.encodec import get_encoder
-from util.moco_aug import Augment
 from layer.gumbel import gumbel_softmax
 from layer.binary_activation import binary_activation
 from util.contrastive import moco_loss, loss_with_queue, update_queue
