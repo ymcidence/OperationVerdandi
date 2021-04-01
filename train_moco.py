@@ -14,7 +14,7 @@ def main():
     conf = parser.parse_args()
 
     time_string = strftime("%a%d%b%Y-%H%M%S", gmtime())
-    result_path = os.path.join(ROOT_PATH, 'result', conf.set_name + 'simple')
+    result_path = os.path.join(ROOT_PATH, 'result', conf.set_name + '_moco')
     task_name = conf.task_name
     save_path = os.path.join(result_path, 'model', task_name + '_' + time_string)
     summary_path = os.path.join(result_path, 'log', task_name + '_' + time_string)

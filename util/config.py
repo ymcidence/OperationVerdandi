@@ -11,7 +11,7 @@ parser.add_argument('-e', '--encoder', default='cifar')
 parser.add_argument('-a', '--assigner', default='soft')
 parser.add_argument('-g', '--gumbel_temp', default=0.3, type=float,
                     help='temp of the gumbel trick. Set it <0 to disable stochasticity')
-parser.add_argument('-n', '--set_name', default='cifar10', help='dataset')
+parser.add_argument('-n', '--set_name', default='cifar10', type=str, help='dataset')
 parser.add_argument('-tn', '--task_name', default='default', help='task name')
 parser.add_argument('-sh', '--shuffle', default=60000)
 parser.add_argument('-q', '--q', default=20, type=int)

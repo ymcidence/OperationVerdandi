@@ -12,6 +12,7 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 def load_data(conf, training=True):
     cases = {
         'cifar100': load_cifar100,
+        'cifar10': load_cifar10,
         'cifar_feat': load_cifar_feat
     }
     _data = cases.get(conf.set_name)()
@@ -33,6 +34,18 @@ def load_cifar100() -> typing.Dict[str, tf.data.Dataset]:
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     data = tfds.load('cifar100', data_dir=data_dir)
+    return data
+
+
+def load_cifar10() -> typing.Dict[str, tf.data.Dataset]:
+    """
+    load from tfds
+    :return: strictly a dict with keys of 'train' and 'test', with each one at least having 'image' and 'label'
+    """
+    data_dir = os.path.join(ROOT_PATH, 'data')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    data = tfds.load('cifar10', data_dir=data_dir)
     return data
 
 
