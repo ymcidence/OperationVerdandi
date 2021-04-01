@@ -110,7 +110,7 @@ def moco_loss(query, key, queue, temp):
     l_neg = tf.einsum('nc,lc->nl', query, queue)
     logits = tf.concat([l_pos, l_neg], axis=1)
     logits /= temp
-    ones = tf.ones_like(l_pos, dtype=tf.float32)[:, tf.newaxis]
+    ones = tf.ones_like(l_pos, dtype=tf.float32)
     zeros = tf.zeros_like(l_neg, dtype=tf.float32)
 
     labels = tf.concat([ones, zeros], axis=1)
