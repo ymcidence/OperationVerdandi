@@ -77,13 +77,17 @@ class MoCo(tf.keras.Model):
         for i, j in zip(self.base_1.trainable_variables, self.base_2.trainable_variables):
             j.assign(self.m * j + (1 - self.m) * i)
 
+    @property
+    def trainable_scope(self):
+        return self.base_1.trainable_variables + self.fc_1.trainable_variables
+
     def cross_rep(self, feat, context, stochastic=1, step=-1):
         # [N K] agg
         _kn = tf.matmul(context, feat, transpose_b=True)  # [K N]
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n + self.fc_1(feat) * 0.1)
+        agg_n = tf.nn.l2_normalize(agg_n + self.fc_1(feat) * 0.)
 
         # [K N] agg
 
@@ -119,9 +123,9 @@ def step_train(conf, data: dict, model: MoCo, opt: tf.keras.optimizers.Optimizer
         assignment, agg_n, agg_k = model(data, step=_step)
         loss = model.losses[0]
 
-        gradients = tape.gradient(loss, model.base_1.trainable_variables)
+        gradients = tape.gradient(loss, model.trainable_scope)
 
-        opt.apply_gradients(zip(gradients, model.trainable_variables))
+        opt.apply_gradients(zip(gradients, model.trainable_scope))
 
     model.update_queues(agg_n, agg_k)
     model.update_momentum()
