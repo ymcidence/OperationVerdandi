@@ -27,7 +27,7 @@ def main():
     model = Model(conf)
     data = load_data(conf, training=True, aug=True)
     data_iter = iter(data)
-    opt = tf.keras.optimizers.Adam(1e-4)
+    opt = tf.keras.optimizers.Adam(1e-3)
     writer = tf.summary.create_file_writer(summary_path)
     checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
     for i in range(conf.max_iter):
