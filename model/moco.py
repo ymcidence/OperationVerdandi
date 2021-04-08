@@ -92,8 +92,9 @@ class MoCo(tf.keras.Model):
         # [K N] agg
 
         heat_map = tf.transpose(assign_n)
-        eps = tf.random.uniform(tf.shape(heat_map), minval=-0.5, maxval=0.5) * stochastic + 0.5  # [K N]
-        assign_k, _ = binary_activation(heat_map, eps)
+        # eps = tf.random.uniform(tf.shape(heat_map), minval=-0.5, maxval=0.5) * stochastic + 0.5  # [K N]
+        # assign_k, _ = binary_activation(heat_map, eps)
+        assign_k = heat_map
 
         def split_agg(_assign, _feat):
             agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
