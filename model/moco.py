@@ -31,7 +31,7 @@ class MoCo(tf.keras.Model):
         self.gumbel_temp = conf.gumbel_temp
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
-        # self.fc_1 = tf.keras.layers.Dense(conf.d_model)
+        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
 
@@ -78,7 +78,7 @@ class MoCo(tf.keras.Model):
 
     @property
     def trainable_scope(self):
-        return self.base_1.trainable_variables  # + self.fc_1.trainable_variables
+        return self.base_1.trainable_variables + self.fc_1.trainable_variables
 
     def cross_rep(self, feat, context, stochastic=1, step=-1):
         # [N K] agg
