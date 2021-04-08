@@ -57,7 +57,7 @@ class MoCo(tf.keras.Model):
             queue = tf.nn.l2_normalize(queue, axis=1)
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
 
-            loss = loss_n + loss_k
+            loss = loss_n + loss_k * .2
 
             self.add_loss(loss)
 
