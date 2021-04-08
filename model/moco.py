@@ -35,11 +35,11 @@ class MoCo(tf.keras.Model):
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
 
-        self.queue_n = tf.stop_gradient(tf.nn.l2_normalize(_queue_n))
+        self.queue_n = tf.stop_gradient(tf.nn.l2_normalize(_queue_n, axis=1))
 
         _queue_k = tf.Variable(tf.initializers.GlorotUniform()([self.q, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueK')
-        self.queue_k = tf.stop_gradient(tf.nn.l2_normalize(_queue_k))
+        self.queue_k = tf.stop_gradient(tf.nn.l2_normalize(_queue_k, axis=1))
 
     def call(self, inputs, training=True, mask=None, step=-1):
         x_1 = inputs['image_1']
@@ -54,10 +54,10 @@ class MoCo(tf.keras.Model):
         if training:
             loss_n = moco_loss(agg_n_1, agg_n_2, self.queue_n, self.temp)
             queue = tf.stop_gradient(self.queue_k + tf.random.normal(tf.shape(self.queue_k), stddev=0.1) + self.queue_k)
-            queue = tf.nn.l2_normalize(queue)
+            queue = tf.nn.l2_normalize(queue, axis=1)
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
 
-            loss = loss_n + 0 * loss_k
+            loss = loss_n + loss_k
 
             self.add_loss(loss)
 
@@ -86,8 +86,8 @@ class MoCo(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n) * 0 + tf.nn.l2_normalize(self.fc_1(feat))
-        agg_n = tf.nn.l2_normalize(agg_n)
+        agg_n = tf.nn.l2_normalize(agg_n, axis=1) + tf.nn.l2_normalize(self.fc_1(feat), axis=1) * .1
+        agg_n = tf.nn.l2_normalize(agg_n, axis=1)
 
         # [K N] agg
 
@@ -99,7 +99,7 @@ class MoCo(tf.keras.Model):
             agg_k = _assign @ _feat  # [K D] note that this aggregation is still unnormalized
             normalizer = tf.reduce_sum(_assign, axis=1, keepdims=True) + 1e-8  # [K 1]
             agg_k = agg_k / normalizer
-            agg_k = tf.nn.l2_normalize(agg_k)  # self.ln_k(agg_k, training=training)
+            agg_k = tf.nn.l2_normalize(agg_k, axis=1)  # self.ln_k(agg_k, training=training)
             return agg_k
 
         agg_k = split_agg(assign_k, feat)
