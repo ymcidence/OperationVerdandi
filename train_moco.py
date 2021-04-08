@@ -8,6 +8,7 @@ from meta import ROOT_PATH
 from model.moco import MoCo as Model, step_train
 from util.data.loader import load_data
 from util.config import parser
+from util.schedule import MoCoSchedule
 
 
 def main():
@@ -27,7 +28,16 @@ def main():
     model = Model(conf)
     data = load_data(conf, training=True, aug=True)
     data_iter = iter(data)
-    opt = tf.keras.optimizers.Adam(1e-3)
+
+    conf.lr_mode = 'exponential'
+    conf.lr_interval = '120,160'
+    conf.lr_value = .1
+    conf.lr = 1.
+    steps_per_epoch = int(60000 / conf.batch_size)
+
+    lr = MoCoSchedule(conf, steps_per_epoch=steps_per_epoch, initial_epoch=0)
+    opt = tf.keras.optimizers.SGD(lr, momentum=.9)
+
     writer = tf.summary.create_file_writer(summary_path)
     checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
     for i in range(conf.max_iter):
