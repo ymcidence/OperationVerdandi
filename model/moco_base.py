@@ -17,7 +17,7 @@ class MoCoBase(tf.keras.Model):
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
 
-        self.queue_n = tf.stop_gradient(tf.nn.l2_normalize(_queue_n))
+        self.queue_n = tf.stop_gradient(tf.nn.l2_normalize(_queue_n, axis=1))
 
     def call(self, inputs, training=True, mask=None, step=-1):
         x_1 = inputs['image_1']
@@ -26,8 +26,8 @@ class MoCoBase(tf.keras.Model):
         feat_1 = self.base_1(x_1, training=training)
         feat_2 = self.base_2(x_2, training=training)
 
-        feat_1 = tf.nn.l2_normalize(feat_1)
-        feat_2 = tf.stop_gradient(tf.nn.l2_normalize(feat_2))
+        feat_1 = tf.nn.l2_normalize(feat_1, axis=1)
+        feat_2 = tf.stop_gradient(tf.nn.l2_normalize(feat_2, axis=1))
 
         if training:
             loss = moco_loss(feat_1, feat_2, self.queue_n, self.temp)
