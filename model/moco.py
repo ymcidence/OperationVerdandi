@@ -83,7 +83,7 @@ class MoCo(tf.keras.Model):
 
     @property
     def trainable_scope(self):
-        return self.base_1.trainable_variables + self.fc_1.trainable_variables
+        return self.base_1.trainable_variables  # + self.fc_1.trainable_variables
 
     def cross_rep(self, feat_a, feat_b, context, stochastic=1, step=-1):
         # [N K] agg
