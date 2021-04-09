@@ -61,7 +61,7 @@ class MoCo(tf.keras.Model):
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
             loss_k_2 = moco_loss(agg_k_1, agg_k_2, self.queue_n, self.temp)
 
-            loss = loss_n + loss_k + loss_k_2 * 0
+            loss = loss_n + loss_k + loss_k_2
 
             self.add_loss(loss)
 
