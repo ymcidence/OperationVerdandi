@@ -3,17 +3,20 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import tensorflow as tf
 from layer.encodec import get_encoder
 from layer.gumbel import gumbel_softmax
-from layer.binary_activation import binary_activation
+# from layer.binary_activation import binary_activation
 from util.contrastive import moco_loss, loss_with_queue, update_queue
 from util.eval import hook
+from util.mmc import mmc
 
 
 class BaseModel(tf.keras.Model):
     def __init__(self, conf):
         super().__init__()
         self.encoder = get_encoder(conf)
-        self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
-                                       initializer=tf.initializers.GlorotUniform())
+        # self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
+        #                                initializer=tf.initializers.GlorotUniform())
+
+        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=False, name='Context')
 
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
@@ -58,7 +61,7 @@ class MoCo(tf.keras.Model):
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
             loss_k_2 = moco_loss(agg_k_1, agg_k_2, self.queue_n, self.temp)
 
-            loss = loss_n + loss_k + loss_k_2
+            loss = loss_n + loss_k + loss_k_2 * 0
 
             self.add_loss(loss)
 
@@ -80,7 +83,7 @@ class MoCo(tf.keras.Model):
 
     @property
     def trainable_scope(self):
-        return self.base_1.trainable_variables #+ self.fc_1.trainable_variables
+        return self.base_1.trainable_variables  # + self.fc_1.trainable_variables
 
     def cross_rep(self, feat, context, stochastic=1, step=-1):
         # [N K] agg
