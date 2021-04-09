@@ -21,8 +21,8 @@ class BaseModel(tf.keras.Model):
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
         x_1 = self.fc_1(x, training=training)
-        x_2 = self.fc_2(x, training=training)
-        return x_1, x_2
+        x_2 = self.fc_2(tf.nn.relu(x_1), training=training)
+        return x_2, x_1
 
 
 class MoCo(tf.keras.Model):
