@@ -13,7 +13,7 @@ def get_encoder(conf):
         model = get_stochastic_linear(conf)
         return model
     if conf.encoder[:5] == 'cifar':
-        model = ResNet(BasicBlock, [3, 4, 6, 3], 4, low_dim=128, width=1, k=conf.k)
+        model = ResNet(BasicBlock, [3, 4, 6, 3], 4, low_dim=128, width=1, k=conf.k, heading=False)
         return model
 
 
@@ -53,11 +53,12 @@ class BasicBlock(tf.keras.layers.Layer):
 
 # noinspection PyAbstractClass
 class ResNet(tf.keras.Model):
-    def __init__(self, block, num_blocks, pool_len=4, low_dim=128, width=1, k=10):
+    def __init__(self, block, num_blocks, pool_len=4, low_dim=128, width=1, k=10, heading=True):
         super().__init__()
         self.channels = 64
         self.pool_len = pool_len
         self.k = k
+        self.heading = heading
         self.conv_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', use_bias=False)
         self.bn_1 = tf.keras.layers.BatchNormalization()
 
@@ -68,7 +69,8 @@ class ResNet(tf.keras.Model):
             self._make_layer(block, self.base * 4, num_blocks[2], stride=2),
             self._make_layer(block, self.base * 8, num_blocks[3], stride=2)
         ])
-        self.fc = tf.keras.layers.Dense(low_dim)
+        if heading:
+            self.fc = tf.keras.layers.Dense(low_dim)
         self.pool = tf.keras.layers.AveragePooling2D(pool_len, pool_len, data_format='channels_last')
 
     def _make_layer(self, block, planes, num_blocks, stride):
@@ -86,7 +88,8 @@ class ResNet(tf.keras.Model):
 
         batch_size = tf.shape(x)[0]
         x = tf.reshape(x, [batch_size, -1])
-        x = self.fc(x, training=training)
+        if self.heading:
+            x = self.fc(x, training=training)
         return x
 
 

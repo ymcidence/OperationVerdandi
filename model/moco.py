@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import tensorflow as tf
 from layer.encodec import get_encoder
 from layer.gumbel import gumbel_softmax
-from layer.binary_activation import binary_activation
+# from layer.binary_activation import binary_activation
 from util.contrastive import moco_loss, loss_with_queue, update_queue
 from util.eval import hook
 
@@ -15,9 +15,14 @@ class BaseModel(tf.keras.Model):
         self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
                                        initializer=tf.initializers.GlorotUniform())
 
+        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
+        self.fc_2 = tf.keras.layers.Dense(conf.d_model)
+
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
-        return x
+        x_1 = self.fc_1(x, training=training)
+        x_2 = self.fc_2(x, training=training)
+        return x_1, x_2
 
 
 class MoCo(tf.keras.Model):
@@ -31,7 +36,7 @@ class MoCo(tf.keras.Model):
         self.gumbel_temp = conf.gumbel_temp
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
-        self.fc_1 = tf.keras.layers.Dense(conf.d_model)
+        # self.fc_1 = tf.keras.layers.Dense(conf.d_model)
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
 
@@ -45,11 +50,11 @@ class MoCo(tf.keras.Model):
         x_1 = inputs['image_1']
         x_2 = inputs['image_2']
 
-        feat_1 = self.base_1(x_1, training=training)
-        feat_2 = self.base_2(x_2, training=training)
+        feat_1_a, feat_1_b = self.base_1(x_1, training=training)
+        feat_2_a, feat_2_b = self.base_2(x_2, training=training)
 
-        assign_1, agg_n_1, agg_k_1 = self.cross_rep(feat_1, self.base_1.context, step=step)
-        assign_2, agg_n_2, agg_k_2 = self.cross_rep(feat_2, self.base_2.context, step=step)
+        assign_1, agg_n_1, agg_k_1 = self.cross_rep(feat_1_a, feat_1_b, self.base_1.context, step=step)
+        assign_2, agg_n_2, agg_k_2 = self.cross_rep(feat_2_a, feat_2_b, self.base_2.context, step=step)
 
         if training:
             loss_n = moco_loss(agg_n_1, agg_n_2, self.queue_n, self.temp)
@@ -80,13 +85,13 @@ class MoCo(tf.keras.Model):
     def trainable_scope(self):
         return self.base_1.trainable_variables + self.fc_1.trainable_variables
 
-    def cross_rep(self, feat, context, stochastic=1, step=-1):
+    def cross_rep(self, feat_a, feat_b, context, stochastic=1, step=-1):
         # [N K] agg
-        _kn = tf.matmul(context, feat, transpose_b=True)  # [K N]
+        _kn = tf.matmul(context, feat_a, transpose_b=True)  # [K N]
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n, axis=1) + tf.nn.l2_normalize(self.fc_1(feat), axis=1) * .1
+        agg_n = tf.nn.l2_normalize(agg_n, axis=1) + tf.nn.l2_normalize(self.fc_1(feat_b), axis=1) * .1
         agg_n = tf.nn.l2_normalize(agg_n, axis=1)
 
         # [K N] agg
@@ -103,7 +108,7 @@ class MoCo(tf.keras.Model):
             agg_k = tf.nn.l2_normalize(agg_k, axis=1)  # self.ln_k(agg_k, training=training)
             return agg_k
 
-        agg_k = split_agg(assign_k, feat)
+        agg_k = split_agg(assign_k, feat_a)
         assignment = tf.argmax(_assign_n, axis=1)
         if step > 0:
             tf.summary.image('adj_nk', assign_n[tf.newaxis, :, :, tf.newaxis] * 255, step=step)
