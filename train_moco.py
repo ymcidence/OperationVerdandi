@@ -32,11 +32,13 @@ def main():
     conf.lr_mode = 'exponential'
     conf.lr_interval = '120,160'
     conf.lr_value = .1
-    conf.lr = 1.
+    conf.lr = 0.001
     steps_per_epoch = int(60000 / conf.batch_size)
 
     lr = MoCoSchedule(conf, steps_per_epoch=steps_per_epoch, initial_epoch=0)
-    opt = tf.keras.optimizers.SGD(lr, momentum=.9)
+    # opt = tf.keras.optimizers.SGD(lr, momentum=.9)
+
+    opt = tf.keras.optimizers.Adam(lr)
 
     writer = tf.summary.create_file_writer(summary_path)
     checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
