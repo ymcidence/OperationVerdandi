@@ -16,7 +16,7 @@ class BaseModel(tf.keras.Model):
         # self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
         #                                initializer=tf.initializers.GlorotUniform())
 
-        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=False, name='Context')
+        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=False, name='Context', dtype=tf.float32)
 
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
