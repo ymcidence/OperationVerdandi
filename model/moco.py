@@ -91,8 +91,8 @@ class MoCo(tf.keras.Model):
         assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
         agg_n = assign_n @ context  # [N D]
-        agg_n = tf.nn.l2_normalize(agg_n, axis=1) + tf.nn.l2_normalize(feat_b, axis=1) * .1
-        agg_n = tf.nn.l2_normalize(agg_n, axis=1)
+        agg_n = tf.nn.l2_normalize(agg_n, axis=1) #+ tf.nn.l2_normalize(feat_b, axis=1) * .1
+        # agg_n = tf.nn.l2_normalize(agg_n, axis=1)
 
         # [K N] agg
 
