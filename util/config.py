@@ -3,7 +3,7 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-b', '--batch_size', default=384, type=int, help='batch_size')
-parser.add_argument('-i', '--max_iter', default=200000, help='iter')
+parser.add_argument('-i', '--max_iter', default=400000, help='iter')
 parser.add_argument('-d', '--d_model', default=128, help='emb size')
 parser.add_argument('-k', '--k', default=10)
 parser.add_argument('-t', '--temp', default=1, type=float)
