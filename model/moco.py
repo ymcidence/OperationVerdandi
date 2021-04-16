@@ -64,13 +64,19 @@ class MoCo(tf.keras.Model):
 
             loss_c = softmax_dot_dec(feat_1, self.base_1.context)
 
-            loss = loss_n + loss_k + loss_c * .1
+            sim_k = tf.matmul(agg_k_1, agg_k_2, transpose_b=True)
+            label_k = tf.eye(self.k)
+
+            loss_k_2 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(label_k, sim_k))
+
+            loss = loss_n + loss_k + loss_c * .1 + loss_k_2 * .1
 
             self.add_loss(loss)
 
             if step >= 0:
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('loss_k', loss_k, step=step)
+                tf.summary.scalar('loss_k_2', loss_k_2, step=step)
                 tf.summary.scalar('loss_c', loss_c, step=step)
                 tf.summary.scalar('loss_n', loss_n, step=step)
 

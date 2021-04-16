@@ -31,7 +31,7 @@ def main():
 
     conf.lr_mode = 'exponential'
     conf.lr_interval = '120,160'
-    conf.lr_value = .1
+    conf.lr_value = .95
     conf.lr = 0.001
     steps_per_epoch = int(60000 / conf.batch_size)
 
