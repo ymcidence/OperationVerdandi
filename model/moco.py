@@ -7,6 +7,7 @@ from layer.gumbel import gumbel_softmax
 from util.contrastive import moco_loss, loss_with_queue, update_queue
 from util.eval import hook
 from util.mmc import mmc
+from util.dec import softmax_dot_dec
 
 
 class BaseModel(tf.keras.Model):
@@ -59,16 +60,18 @@ class MoCo(tf.keras.Model):
             queue = tf.stop_gradient(self.queue_k + tf.random.normal(tf.shape(self.queue_k), stddev=0.1) + self.queue_k)
             queue = tf.nn.l2_normalize(queue, axis=1)
             loss_k = loss_with_queue(agg_k_1, tf.stop_gradient(agg_k_2), queue, self.k, self.q, self.temp)
-            loss_k_2 = moco_loss(agg_k_1, agg_k_2, self.queue_n, self.temp)
+            # loss_k_2 = moco_loss(agg_k_1, agg_k_2, self.queue_n, self.temp)
 
-            loss = loss_n + loss_k + loss_k_2
+            loss_c = softmax_dot_dec(feat_1, self.base_1.context)
+
+            loss = loss_n + loss_k + loss_c * .1
 
             self.add_loss(loss)
 
             if step >= 0:
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('loss_k', loss_k, step=step)
-                tf.summary.scalar('loss_k_2', loss_k_2, step=step)
+                tf.summary.scalar('loss_c', loss_c, step=step)
                 tf.summary.scalar('loss_n', loss_n, step=step)
 
         return assign_1, agg_n_2, agg_k_2

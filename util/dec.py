@@ -25,3 +25,18 @@ def dec_loss(q):
     loss = tf.reduce_sum(loss, axis=1)  # [N]
 
     return tf.reduce_mean(loss)
+
+
+def softmax_dot_dec(query, key):
+    q = tf.matmul(query, key, transpose_b=True)
+
+    q = tf.nn.softmax(q, axis=1)
+
+    return dec_loss(q)
+
+
+if __name__ == '__main__':
+    a = tf.constant([[.3, .2, .5], [.5, .1, .4]])
+    b = dec_loss(a)
+
+    print(b)
