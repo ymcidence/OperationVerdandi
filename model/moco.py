@@ -17,7 +17,8 @@ class BaseModel(tf.keras.Model):
         # self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
         #                                initializer=tf.initializers.GlorotUniform())
 
-        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=False, name='Context', dtype=tf.float32)
+        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=conf.trainable_context, name='Context',
+                                   dtype=tf.float32)
 
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
@@ -32,6 +33,7 @@ class MoCo(tf.keras.Model):
         self.q = conf.k * conf.q
         self.l = conf.l
         self.temp = conf.temp
+        self.sto = conf.sto
         self.gumbel_temp = conf.gumbel_temp
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
@@ -94,11 +96,13 @@ class MoCo(tf.keras.Model):
     def trainable_scope(self):
         return self.base_1.trainable_variables  # + self.fc_1.trainable_variables
 
-    def cross_rep(self, feat, context, stochastic=1, step=-1):
+    def cross_rep(self, feat, context, step=-1):
         # [N K] agg
         _kn = tf.matmul(context, feat, transpose_b=True)  # [K N]
-        assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False)  # [N K]
-        _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True)
+
+        stochastic = 1 if step <= self.sto else 0
+        assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=False, stochastic=stochastic)  # [N K]
+        _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True, stochastic=stochastic)
         # agg_n = assign_n @ context  # [N D]
         # agg_n = tf.nn.l2_normalize(agg_n, axis=1)  # + tf.nn.l2_normalize(self.fc_1(feat), axis=1) * .1
         agg_n = tf.nn.l2_normalize(feat, axis=1)

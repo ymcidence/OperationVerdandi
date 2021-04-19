@@ -9,6 +9,7 @@ from model.moco import MoCo as Model, step_train
 from util.data.loader import load_data
 from util.config import parser
 from util.schedule import MoCoSchedule
+import json
 
 
 def main():
@@ -40,8 +41,16 @@ def main():
 
     opt = tf.keras.optimizers.Adam(lr)
 
+    if conf.restore != '':
+        restore_checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
+        restore_checkpoint.restore(conf.restore)
+        print('Restored from {}'.format(conf.restore))
     writer = tf.summary.create_file_writer(summary_path)
     checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
+
+    with open(os.path.join(save_path, 'conf.txt'), 'w') as f:
+        json.dump(conf.__dict__, f, indent=2)
+
     for i in range(conf.max_iter):
         batch_1 = next(data_iter)
         with writer.as_default():
