@@ -21,8 +21,8 @@ def load_data(conf, training=True, aug=False):
     aug = Augment(conf)
 
     def _map_augmentation(x):
-        img_1 = aug(x['image'])
-        img_2 = aug(x['image'])
+        img_1 = aug(x['image'], training=training)
+        img_2 = aug(x['image'], training=training)
         x['image_1'] = img_1
         x['image_2'] = img_2
         return x
