@@ -38,7 +38,7 @@ def load_data(conf, training=True, aug=False):
                                                                                             num_parallel_calls=AUTOTUNE).batch(
             conf.batch_size).prefetch(AUTOTUNE)
     else:
-        return _data['test'].batch(conf.batch_size).prefetch(AUTOTUNE)
+        return _data['test'].map(mapper, num_parallel_calls=AUTOTUNE).batch(conf.batch_size).prefetch(AUTOTUNE)
 
 
 def load_cifar100() -> typing.Dict[str, tf.data.Dataset]:
