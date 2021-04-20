@@ -17,8 +17,10 @@ class BaseModel(tf.keras.Model):
         # self.context = self.add_weight('ContextK', [conf.k, conf.d_model], dtype=tf.float32,
         #                                initializer=tf.initializers.GlorotUniform())
 
-        self.context = tf.Variable(mmc(conf.k, conf.d_model), trainable=conf.trainable_context, name='Context',
-                                   dtype=tf.float32)
+        _context = tf.Variable(mmc(conf.k, conf.d_model), trainable=conf.trainable_context, name='Context',
+                               dtype=tf.float32)
+
+        self.context = tf.nn.l2_normalize(_context, axis=1)
 
     def call(self, inputs, training=True, mask=None):
         x = self.encoder(inputs, training=training)
@@ -51,8 +53,8 @@ class MoCo(tf.keras.Model):
         x_1 = inputs['image_1']
         x_2 = inputs['image_2']
 
-        feat_1 = self.base_1(x_1, training=training)
-        feat_2 = self.base_2(x_2, training=training)
+        feat_1 = tf.nn.l2_normalize(self.base_1(x_1, training=training), axis=1)
+        feat_2 = tf.nn.l2_normalize(self.base_2(x_2, training=training), axis=1)
 
         assign_1, agg_n_1, agg_k_1 = self.cross_rep(feat_1, self.base_1.context, step=step)
         assign_2, agg_n_2, agg_k_2 = self.cross_rep(feat_2, self.base_2.context, step=step)
@@ -71,7 +73,7 @@ class MoCo(tf.keras.Model):
 
             loss_k_2 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(label_k, sim_k))
 
-            loss = loss_n + loss_k + loss_c * .0 + loss_k_2 * .0
+            loss = loss_n + loss_k
 
             self.add_loss(loss)
 
@@ -105,7 +107,7 @@ class MoCo(tf.keras.Model):
         _assign_n = gumbel_softmax(tf.transpose(_kn), self.gumbel_temp, hard=True, stochastic=stochastic)
         # agg_n = assign_n @ context  # [N D]
         # agg_n = tf.nn.l2_normalize(agg_n, axis=1)  # + tf.nn.l2_normalize(self.fc_1(feat), axis=1) * .1
-        agg_n = tf.nn.l2_normalize(feat, axis=1)
+        agg_n = feat  # tf.nn.l2_normalize(feat, axis=1)
 
         # [K N] agg
 
