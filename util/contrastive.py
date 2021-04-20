@@ -103,3 +103,17 @@ def loss_with_queue(query: tf.Tensor, key: tf.Tensor, queue: tf.Tensor, k, q, te
     loss = tf.nn.softmax_cross_entropy_with_logits(label, logit)
     loss = tf.reduce_mean(loss)
     return loss
+
+
+def moco_loss(query, key, queue, temp):
+    l_pos = tf.einsum('nc,nc->n', query, tf.stop_gradient(key))[:, tf.newaxis]
+    l_neg = tf.einsum('nc,lc->nl', query, queue)
+    logits = tf.concat([l_pos, l_neg], axis=1)
+    logits /= temp
+    ones = tf.ones_like(l_pos, dtype=tf.float32)
+    zeros = tf.zeros_like(l_neg, dtype=tf.float32)
+
+    labels = tf.concat([ones, zeros], axis=1)
+
+    loss = tf.nn.softmax_cross_entropy_with_logits(labels, logits)
+    return tf.reduce_mean(loss)

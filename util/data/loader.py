@@ -5,23 +5,40 @@ import tensorflow_datasets as tfds
 import os
 from meta import ROOT_PATH
 import typing
+from util.moco_aug import Augment
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def load_data(conf, training=True):
+def load_data(conf, training=True, aug=False):
     cases = {
         'cifar100': load_cifar100,
+        'cifar10': load_cifar10,
         'cifar_feat': load_cifar_feat
     }
     _data = cases.get(conf.set_name)()
 
+    aug = Augment(conf)
+
+    def _map_augmentation(x):
+        img_1 = aug(x['image'], training=training)
+        img_2 = aug(x['image'], training=training)
+        x['image_1'] = img_1
+        x['image_2'] = img_2
+        return x
+
+    def _map_dummy(x):
+        return x
+
+    mapper = _map_augmentation if aug else _map_dummy
+
     if training:
         # Note that in clustering, we don't use the conventional train-test split, but instead, have them together
-        return _data['train'].concatenate(_data['test']).repeat().shuffle(conf.shuffle).batch(conf.batch_size).prefetch(
-            AUTOTUNE)
+        return _data['train'].concatenate(_data['test']).repeat().shuffle(conf.shuffle).map(mapper,
+                                                                                            num_parallel_calls=AUTOTUNE).batch(
+            conf.batch_size).prefetch(AUTOTUNE)
     else:
-        return _data['test'].batch(conf.batch_size).prefetch(AUTOTUNE)
+        return _data['test'].map(mapper, num_parallel_calls=AUTOTUNE).batch(conf.batch_size).prefetch(AUTOTUNE)
 
 
 def load_cifar100() -> typing.Dict[str, tf.data.Dataset]:
@@ -33,6 +50,18 @@ def load_cifar100() -> typing.Dict[str, tf.data.Dataset]:
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     data = tfds.load('cifar100', data_dir=data_dir)
+    return data
+
+
+def load_cifar10() -> typing.Dict[str, tf.data.Dataset]:
+    """
+    load from tfds
+    :return: strictly a dict with keys of 'train' and 'test', with each one at least having 'image' and 'label'
+    """
+    data_dir = os.path.join(ROOT_PATH, 'data')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    data = tfds.load('cifar10', data_dir=data_dir)
     return data
 
 

@@ -3,17 +3,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import random
 import tensorflow as tf
 import tensorflow_addons as tfa
-
-mean_std = [[0.485, 0.456, 0.406],
-            [0.229, 0.224, 0.225]]
+from util.data.data_info import get_dataset_stat
 
 
 # noinspection PyDefaultArgument
 class Augment(object):
-    def __init__(self, args, mode='train'):
-        self.args = args
-        self.mode = mode
-        self.mean, self.std = mean_std
+    def __init__(self, conf):
+        self.args = conf
+        self.args.brightness = .4
+        self.args.contrast = .4
+        self.args.hue = .4
+        image_size, mean, std, n_class = get_dataset_stat(conf.set_name)
+        self.mean = mean
+        self.std = std
+        self.img_size = [image_size, image_size, 3]
 
     def _augmentv1(self, x, shape, coord=[[[0., 0., 1., 1.]]]):
         x = self._crop(x, shape, coord)
@@ -62,7 +65,7 @@ class Augment(object):
         return x
 
     def _resize(self, x):
-        x = tf.image.resize(x, (self.args.img_size, self.args.img_size))
+        x = tf.image.resize(x, [self.img_size[0], self.img_size[1]])
         x = tf.saturate_cast(x, tf.uint8)
         return x
 
@@ -128,3 +131,28 @@ class Augment(object):
         if tf.less(tf.random.uniform(shape=[], minval=0, maxval=1, dtype=tf.float32), tf.cast(p, tf.float32)):
             x = tfa.image.gaussian_filter2d(x, filter_shape=radius)
         return x
+
+    def __call__(self, x, training=True):
+        if training:
+            return self._augmentv1(x, self.img_size)
+        else:
+            return self._standardize(x)
+
+
+def test():
+    from util.data.loader import load_cifar100
+    from argparse import Namespace
+    data = load_cifar100()
+    d = data['train']
+    d = d.batch(5)
+    i = iter(d)
+    batch = next(i)
+    conf = {'set_name': 'cifar100'}
+    conf = Namespace(**conf)
+    aug = Augment(conf)
+    aug(batch['image'])
+    print('hehe')
+
+
+if __name__ == '__main__':
+    test()
