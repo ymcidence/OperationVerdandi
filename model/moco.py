@@ -39,6 +39,8 @@ class MoCo(tf.keras.Model):
         self.gumbel_temp = conf.gumbel_temp
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
+
+        self.update_initial()
         # self.fc_1 = tf.keras.layers.Dense(conf.d_model)
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
@@ -93,6 +95,10 @@ class MoCo(tf.keras.Model):
     def update_momentum(self):
         for i, j in zip(self.base_1.trainable_variables, self.base_2.trainable_variables):
             j.assign(self.m * j + (1 - self.m) * i)
+
+    def update_initial(self):
+        for i, j in zip(self.base_1.variables, self.base_2.variables):
+            j.assign(i)
 
     @property
     def trainable_scope(self):
