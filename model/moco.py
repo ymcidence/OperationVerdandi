@@ -73,7 +73,7 @@ class MoCo(tf.keras.Model):
 
             loss_k_2 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(label_k, sim_k))
 
-            loss = loss_n + loss_k
+            loss = loss_n + loss_k + .1 * loss_c
 
             self.add_loss(loss)
 
