@@ -36,7 +36,9 @@ def main():
     steps_per_epoch = int(60000 / conf.batch_size)
 
     lr = MoCoSchedule(conf, steps_per_epoch=steps_per_epoch, initial_epoch=0)
-    opt = tf.keras.optimizers.SGD(lr, momentum=.9)
+    # opt = tf.keras.optimizers.SGD(lr, momentum=.9)
+
+    opt = tf.keras.optimizers.Adam(.001)
 
     if conf.restore != '':
         restore_checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
