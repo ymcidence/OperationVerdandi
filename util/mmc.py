@@ -20,7 +20,6 @@ def mmc(k, d_model):
     return rslt
 
 
-
 if __name__ == '__main__':
     a = mmc(10, 128)
     print(a)
