@@ -45,13 +45,16 @@ def main():
         restore_checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
         restore_checkpoint.restore(conf.restore)
         print('Restored from {}'.format(conf.restore))
+        starter = 1
+    else:
+        starter = 0
     writer = tf.summary.create_file_writer(summary_path)
     checkpoint = tf.train.Checkpoint(actor_opt=opt, model=model)
 
     with open(os.path.join(save_path, 'conf.txt'), 'w') as f:
         json.dump(conf.__dict__, f, indent=2)
 
-    for i in range(conf.max_iter):
+    for i in range(starter, conf.max_iter):
         batch_1 = next(data_iter)
         with writer.as_default():
 

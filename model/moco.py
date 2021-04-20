@@ -40,7 +40,6 @@ class MoCo(tf.keras.Model):
         self.base_1 = BaseModel(conf)
         self.base_2 = BaseModel(conf)
 
-        self.update_initial()
         # self.fc_1 = tf.keras.layers.Dense(conf.d_model)
         _queue_n = tf.Variable(tf.initializers.GlorotUniform()([self.l, conf.d_model]), trainable=False,
                                dtype=tf.float32, name='QueueN')
@@ -145,6 +144,10 @@ def step_train(conf, data: dict, model: MoCo, opt: tf.keras.optimizers.Optimizer
     # feat = data['image']
     label = data['label']
     _step = -1 if step % 100 > 0 else step
+
+    if step == 0:
+        _, _, _ = model(data, step=_step)
+        model.update_initial()
 
     with tf.GradientTape() as tape:
         assignment, agg_n, agg_k = model(data, step=_step)
