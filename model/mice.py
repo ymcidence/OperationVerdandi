@@ -8,6 +8,7 @@ from util.mmc import mmc
 from util.eval import hook
 from util.dec import dec_loss
 
+
 class BaseModel(tf.keras.Model):
     def __init__(self, conf: Namespace):
         super().__init__()
@@ -97,13 +98,15 @@ class MiCE(tf.keras.Model):
                 variational_q * (tf.math.log(gating) + tf.math.log(experts) - tf.math.log(variational_q)), axis=1)
             elbo = tf.reduce_mean(elbo)
 
-            loss = -elbo
+            dec_2 = dec_loss(gating)
+            dec = dec_loss(variational_q)
+            loss = -elbo + .1 * dec
             self.add_loss(loss)
 
             if step >= 0:
-                dec = dec_loss(variational_q)
                 tf.summary.scalar('dec_loss', dec, step=step)
-                tf.summary.scalar('loss', loss, step=step)
+                tf.summary.scalar('dec_2', dec_2, step=step)
+                tf.summary.scalar('loss', -elbo, step=step)
                 tf.summary.histogram('assign_n', assignment, step=step)
 
             return assignment, f, v
