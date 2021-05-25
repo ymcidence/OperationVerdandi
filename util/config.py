@@ -15,7 +15,7 @@ parser.add_argument('-n', '--set_name', default='cifar10', type=str, help='datas
 parser.add_argument('-tn', '--task_name', default='default', help='task name')
 parser.add_argument('-sh', '--shuffle', default=60000)
 parser.add_argument('-q', '--q', default=20, type=int)
-parser.add_argument('-l', '--l', default=12000, type=int)
+parser.add_argument('-l', '--l', default=16384, type=int)
 parser.add_argument('-st', '--sto', default=100000, type=int)
 parser.add_argument('-r', '--restore', default='', type=str)
 parser.add_argument('-tc', '--trainable_context', default=True, type=bool)
