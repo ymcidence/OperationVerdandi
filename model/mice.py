@@ -70,8 +70,8 @@ class MiCE(tf.keras.Model):
         v = self.base_2(x_v, training=training)
         v = tf.stop_gradient(v)
 
-        g = self.base_1(x_g, training=training, base_only=True)
-        g = self.gate(g, training=training)
+        _g = self.base_1(x_g, training=training, base_only=True)
+        g = self.gate(_g, training=training)
 
         v_f = tf.einsum('nkd,nkd->nk', v, f)
         v_mu = tf.einsum('nkd,kd->nk', v, tf.nn.l2_normalize(self.mu, axis=-1))
@@ -108,7 +108,7 @@ class MiCE(tf.keras.Model):
 
             return assignment, f, v
         else:
-            return g
+            return _g
 
     def update_queues(self, new_value):
         """
