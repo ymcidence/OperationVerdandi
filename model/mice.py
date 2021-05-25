@@ -6,7 +6,7 @@ from layer.encodec import get_encoder
 from argparse import Namespace
 from util.mmc import mmc
 from util.eval import hook
-
+from util.dec import dec_loss
 
 class BaseModel(tf.keras.Model):
     def __init__(self, conf: Namespace):
@@ -101,10 +101,14 @@ class MiCE(tf.keras.Model):
             self.add_loss(loss)
 
             if step >= 0:
+                dec = dec_loss(variational_q)
+                tf.summary.scalar('dec_loss', dec, step=step)
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.histogram('assign_n', assignment, step=step)
 
-        return assignment, f, v
+            return assignment, f, v
+        else:
+            return g
 
     def update_queues(self, new_value):
         """
